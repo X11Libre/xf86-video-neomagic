@@ -22,7 +22,7 @@ RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
 CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 **********************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_2070.c,v 1.5 2002/10/30 12:52:21 alanh Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_2070.c,v 1.4 2002/04/04 14:05:44 eich Exp $ */
 
 /*
  * The original Precision Insight driver for
@@ -157,7 +157,7 @@ Neo2070AccelInit(ScreenPtr pScreen)
 	return FALSE;
     }
     
-    return(XAAInit(pScreen, infoPtr));
+    return (xaaSetupWrapper(pScreen, infoPtr, pScrn->depth, &nPtr->accelSync));
 
 }
 

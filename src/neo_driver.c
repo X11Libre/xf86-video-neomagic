@@ -81,6 +81,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "xf86cmap.h"
 
 #include "fb.h"
+#include "fbpseudocolor.h"
 
 /* Needed by Resources Access Control (RAC) */
 #include "xf86RAC.h"
@@ -1395,7 +1396,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 
     /* Print the list of modes being used */
     xf86PrintModes(pScrn);
-
+    
     /* If monitor resolution is set on the command line, use it */
     xf86SetDpi(pScrn, 0, 0);
 
@@ -1549,12 +1550,22 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     miClearVisualTypes();
     
     /* Setup the visuals we support. */
-    
+#if 0
     if (!miSetVisualTypes(pScrn->depth,
       		      miGetDefaultVisualMask(pScrn->depth),
 		      pScrn->rgbBits, pScrn->defaultVisual))
          return FALSE;
-
+#else
+    if (!miSetVisualTypes(pScrn->depth,
+      		      miGetDefaultVisualMask(pScrn->depth),
+		      pScrn->rgbBits, pScrn->defaultVisual))
+         return FALSE;
+    if (pScrn->depth > 8) {
+	if (!miSetVisualTypes(8, miGetDefaultVisualMask(8), 6,
+			      pScrn->defaultVisual))
+	    return FALSE;
+    }
+#endif
     if (!miSetPixmapDepths ()) return FALSE;
 
     /*
@@ -1579,19 +1590,19 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	nPtr->ShadowPtr = NULL;
 	FBStart = nPtr->NeoFbBase;
     }
-    
+
     ret = fbScreenInit(pScreen, FBStart,
 			    width, height,
 			    pScrn->xDpi, pScrn->yDpi,
 			    displayWidth, pScrn->bitsPerPixel);
     if (!ret)
 	return FALSE;
-
     if (pScrn->depth > 8) {
         /* Fixup RGB ordering */
         visual = pScreen->visuals + pScreen->numVisuals;
         while (--visual >= pScreen->visuals) {
-	    if ((visual->class | DynamicClass) == DirectColor) {
+	    if ((visual->class | DynamicClass) == DirectColor
+		&& visual->nplanes > 8) {
 		visual->offsetRed = pScrn->offset.red;
 		visual->offsetGreen = pScrn->offset.green;
 		visual->offsetBlue = pScrn->offset.blue;
@@ -1642,13 +1653,6 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Using nonlinear mode\n");
 	xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Using software cursor in "
 		   "nonlinear mode\n");
-	miInitializeBackingStore(pScreen);
-	xf86SetBackingStore(pScreen);
-        xf86SetSilkenMouse(pScreen);
-
-	/* Initialise cursor functions */
-	miDCInitialize (pScreen, xf86GetPointerScreenFuncs());
-
     } else {
 	nAcl->cacheStart = -1;
 	nAcl->cacheEnd = -1;
@@ -1749,14 +1753,13 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		       "Acceleration %s Initialized\n",ret ? "" : "not");
 	} 
 
-	miInitializeBackingStore(pScreen);
-	xf86SetBackingStore(pScreen);
-        xf86SetSilkenMouse(pScreen);
-	
-	/* Initialise cursor functions */
-	miDCInitialize (pScreen, xf86GetPointerScreenFuncs());
-
     }
+    miInitializeBackingStore(pScreen);
+    xf86SetBackingStore(pScreen);
+    xf86SetSilkenMouse(pScreen);
+
+    /* Initialise cursor functions */
+    miDCInitialize (pScreen, xf86GetPointerScreenFuncs());    
 
     if (nAcl->CursorAddress != -1) {
       /* HW cursor functions */
@@ -1778,13 +1781,12 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		nPtr->PointerMoved = pScrn->PointerMoved;
 		pScrn->PointerMoved = neoPointerMoved;
 	    }
-	    
-	   switch(pScrn->bitsPerPixel) {
-	   case 8:	nPtr->refreshArea = neoRefreshArea8;	break;
-	   case 16:	nPtr->refreshArea = neoRefreshArea16;	break;
-	   case 24:	nPtr->refreshArea = neoRefreshArea24;	break;
-	   case 32:	nPtr->refreshArea = neoRefreshArea32;	break;
-	   }
+	    switch(pScrn->bitsPerPixel) {
+	    case 8:	nPtr->refreshArea = neoRefreshArea8;	break;
+	    case 16:	nPtr->refreshArea = neoRefreshArea16;	break;
+	    case 24:	nPtr->refreshArea = neoRefreshArea24;	break;
+	    case 32:	nPtr->refreshArea = neoRefreshArea32;	break;
+	    }
 	}
 #if 0
 	ShadowFBInit(pScreen, nPtr->refreshArea);
@@ -1801,6 +1803,9 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
                          NEOLoadPalette, NULL, 
                          CMAP_PALETTED_TRUECOLOR | CMAP_RELOAD_ON_MODE_SWITCH))
 	return FALSE;
+
+	if (pScrn->depth == 16)
+	    xxSetup(pScreen,8, pScrn->depth, NULL, nPtr->accelSync); /*@!@*/
 
     racflag |= RAC_COLORMAP;
     if (nPtr->NeoHWCursorInitialized)
@@ -2675,7 +2680,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
      */
     NeoStd->Attribute[16] = 0x01;
 
-    switch (pScrn->depth) {
+    switch (pScrn->depth) { /*@!@*/
     case  8 :
 	NeoStd->CRTC[0x13] = pScrn->displayWidth >> 3;
 	NeoNew->ExtCRTOffset   = pScrn->displayWidth >> 11;

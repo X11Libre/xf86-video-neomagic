@@ -22,7 +22,7 @@ RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
 CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 **********************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_2200.c,v 1.20 2003/01/12 03:55:48 tsi Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_2200.c,v 1.19tsi Exp $ */
 /*
  * The original Precision Insight driver for
  * XFree86 v.3.3 has been sponsored by Red Hat.
@@ -112,7 +112,6 @@ static unsigned int neo2200Rop[16] = {
     0x070000,    /* 0x0111 - GXnand          */
     0x0f0000     /* 0x1111 - GXset           */
 };
-
 
 Bool 
 Neo2200AccelInit(ScreenPtr pScreen)
@@ -252,8 +251,7 @@ Neo2200AccelInit(ScreenPtr pScreen)
 	return FALSE;
     }
 
-
-    return(XAAInit(pScreen, infoPtr));
+    return (xaaSetupWrapper(pScreen, infoPtr, pScrn->depth, &nPtr->accelSync));
 }
 
 static void
