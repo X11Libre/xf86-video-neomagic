@@ -30,7 +30,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * Copyright 2002 Shigehiro Nomura
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_driver.c,v 1.73 2003/10/31 15:46:34 tsi Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_driver.c,v 1.74 2003/12/31 05:07:30 dawes Exp $ */
 
 /*
  * The original Precision Insight driver for
@@ -1322,14 +1322,41 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	nPtr->NeoCursorMem = 0;
     apertureSize = (pScrn->videoRam * 1024) - nPtr->NeoCursorMem;
 
-   if ((nPtr->NeoPanelWidth == 800) && (nPtr->NeoPanelHeight == 480)) {
-       neo800x480Mode.next = pScrn->monitor->Modes;
-       pScrn->monitor->Modes = &neo800x480Mode;
-   }
-   if ((nPtr->NeoPanelWidth == 1024) && (nPtr->NeoPanelHeight == 480)) {
-       neo1024x480Mode.next = pScrn->monitor->Modes;
-       pScrn->monitor->Modes = &neo1024x480Mode;
-   }
+    if ((nPtr->NeoPanelWidth == 800) && (nPtr->NeoPanelHeight == 480)) {
+	neo800x480Mode.next = pScrn->monitor->Modes;
+	pScrn->monitor->Modes = &neo800x480Mode;
+    }
+    if ((nPtr->NeoPanelWidth == 1024) && (nPtr->NeoPanelHeight == 480)) {
+	neo1024x480Mode.next = pScrn->monitor->Modes;
+	pScrn->monitor->Modes = &neo1024x480Mode;
+    }
+
+    if (!pScrn->monitor->DDC) {
+	/*
+	 * If the monitor parameters are not specified explicitly, set them
+	 * so that 60Hz modes up to the panel size are allowed.
+	 */
+	if (pScrn->monitor->nHsync == 0) {
+	    pScrn->monitor->nHsync = 1;
+	    pScrn->monitor->hsync[0].lo = 28;
+	    pScrn->monitor->hsync[0].hi =
+				60.0 * 1.07 * nPtr->NeoPanelHeight / 1000.0;
+	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
+		       "Using hsync range matching panel size: %.2f-%.2f kHz\n",
+		       pScrn->monitor->hsync[0].lo,
+		       pScrn->monitor->hsync[0].hi);
+	}
+	if (pScrn->monitor->nVrefresh == 0) {
+	    pScrn->monitor->nVrefresh = 1;
+	    pScrn->monitor->vrefresh[0].lo = 55.0;
+	    pScrn->monitor->vrefresh[0].hi = 65.0;
+	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
+		       "Using vsync range for panel: %.2f-%.2f kHz\n",
+		       pScrn->monitor->vrefresh[0].lo,
+		       pScrn->monitor->vrefresh[0].hi);
+	}
+    }
+
     /*
      * For external displays, limit the width to 1024 pixels or less.
      */
