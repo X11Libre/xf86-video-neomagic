@@ -110,8 +110,10 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "Xproto.h"
 #include "scrnintstr.h"
 #include "servermd.h"
+#ifdef XFreeXDGA
 #define _XF86DGA_SERVER_
 #include "extensions/xf86dgastr.h"
+#endif
 
 /* Mandatory functions */
 static const OptionInfoRec *	NEOAvailableOptions(int chipid, int busid);
