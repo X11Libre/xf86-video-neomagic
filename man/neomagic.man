@@ -1,4 +1,4 @@
-.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neomagic.man,v 1.5 2003/05/29 21:48:09 herrb Exp $ 
+.\" $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neomagic.man,v 1.4 2003/02/20 03:22:52 dawes Exp $ 
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
 .TH NEOMAGIC __drivermansuffix__ __vendorversion__
@@ -14,7 +14,7 @@ neomagic \- Neomagic video driver
 .fi
 .SH DESCRIPTION
 .B neomagic 
-is an XFree86 driver for the Neomagic graphics chipsets found in many
+is an __xservername__ driver for the Neomagic graphics chipsets found in many
 laptop computers.  
 .SH SUPPORTED HARDWARE
 .B neomagic
@@ -46,7 +46,7 @@ and newer models.  All visuals are supported in depth 8.  TrueColor and
 DirectColor visuals are supported in the other depths.
 
 .SH CONFIGURATION DETAILS
-Please refer to XF86Config(__filemansuffix__) for general configuration
+Please refer to __xconfigfile__(__filemansuffix__) for general configuration
 details.  This section only covers configuration details specific to this
 driver.
 .PP
@@ -90,7 +90,7 @@ following options are needed to avoid a lock-up of the graphic engine:
 .fi
 
 .SH "SEE ALSO"
-XFree86(1), XF86Config(__filemansuffix__), xf86config(1), Xserver(1), X(__miscmansuffix__)
+__xservername__(__appmansuffix__), __xconfigfile__(__filemansuffix__), xorgconfig(__appmansuffix__), Xserver(__appmansuffix__), X(__miscmansuffix__)
 .SH AUTHORS
 Authors include: Jens Owen, Kevin E. Martin, and also Egbert Eich,  
 Mark Vojkovich, Alan Hourihane.
