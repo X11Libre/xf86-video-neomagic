@@ -81,6 +81,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "xf86cmap.h"
 
 #include "fb.h"
+#include "fbpseudocolor.h"
 
 /* Needed by Resources Access Control (RAC) */
 #include "xf86RAC.h"
@@ -429,10 +430,10 @@ static const char *vgahwSymbols[] = {
     "vgaHWProtect",
     "vgaHWRestore",
     "vgaHWSave",
-    "vgaHWSaveScreen",
+    "vgaHWSaveScreenWeak",
     "vgaHWSetStdFuncs",
     "vgaHWUnlock",
-    "vgaHWddc1SetSpeed",
+    "vgaHWddc1SetSpeedWeak",
     NULL
 };
 
@@ -492,7 +493,7 @@ static XF86ModuleVersionInfo neoVersRec =
 	MODULEVENDORSTRING,
 	MODINFOSTRING1,
 	MODINFOSTRING2,
-	XF86_VERSION_CURRENT,
+	XORG_VERSION_CURRENT,
 	NEO_MAJOR_VERSION, NEO_MINOR_VERSION, NEO_PATCHLEVEL,
 	ABI_CLASS_VIDEODRV,
 	ABI_VIDEODRV_VERSION,
@@ -1395,7 +1396,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 
     /* Print the list of modes being used */
     xf86PrintModes(pScrn);
-
+    
     /* If monitor resolution is set on the command line, use it */
     xf86SetDpi(pScrn, 0, 0);
 
@@ -1549,12 +1550,22 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     miClearVisualTypes();
     
     /* Setup the visuals we support. */
-    
+#if 0
     if (!miSetVisualTypes(pScrn->depth,
       		      miGetDefaultVisualMask(pScrn->depth),
 		      pScrn->rgbBits, pScrn->defaultVisual))
          return FALSE;
-
+#else
+    if (!miSetVisualTypes(pScrn->depth,
+      		      miGetDefaultVisualMask(pScrn->depth),
+		      pScrn->rgbBits, pScrn->defaultVisual))
+         return FALSE;
+    if (pScrn->depth > 8) {
+	if (!miSetVisualTypes(8, miGetDefaultVisualMask(8), 6,
+			      pScrn->defaultVisual))
+	    return FALSE;
+    }
+#endif
     if (!miSetPixmapDepths ()) return FALSE;
 
     /*
@@ -1579,19 +1590,19 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	nPtr->ShadowPtr = NULL;
 	FBStart = nPtr->NeoFbBase;
     }
-    
+
     ret = fbScreenInit(pScreen, FBStart,
 			    width, height,
 			    pScrn->xDpi, pScrn->yDpi,
 			    displayWidth, pScrn->bitsPerPixel);
     if (!ret)
 	return FALSE;
-
     if (pScrn->depth > 8) {
         /* Fixup RGB ordering */
         visual = pScreen->visuals + pScreen->numVisuals;
         while (--visual >= pScreen->visuals) {
-	    if ((visual->class | DynamicClass) == DirectColor) {
+	    if ((visual->class | DynamicClass) == DirectColor
+		&& visual->nplanes > 8) {
 		visual->offsetRed = pScrn->offset.red;
 		visual->offsetGreen = pScrn->offset.green;
 		visual->offsetBlue = pScrn->offset.blue;
@@ -1642,13 +1653,6 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Using nonlinear mode\n");
 	xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Using software cursor in "
 		   "nonlinear mode\n");
-	miInitializeBackingStore(pScreen);
-	xf86SetBackingStore(pScreen);
-        xf86SetSilkenMouse(pScreen);
-
-	/* Initialise cursor functions */
-	miDCInitialize (pScreen, xf86GetPointerScreenFuncs());
-
     } else {
 	nAcl->cacheStart = -1;
 	nAcl->cacheEnd = -1;
@@ -1749,14 +1753,13 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		       "Acceleration %s Initialized\n",ret ? "" : "not");
 	} 
 
-	miInitializeBackingStore(pScreen);
-	xf86SetBackingStore(pScreen);
-        xf86SetSilkenMouse(pScreen);
-	
-	/* Initialise cursor functions */
-	miDCInitialize (pScreen, xf86GetPointerScreenFuncs());
-
     }
+    miInitializeBackingStore(pScreen);
+    xf86SetBackingStore(pScreen);
+    xf86SetSilkenMouse(pScreen);
+
+    /* Initialise cursor functions */
+    miDCInitialize (pScreen, xf86GetPointerScreenFuncs());    
 
     if (nAcl->CursorAddress != -1) {
       /* HW cursor functions */
@@ -1778,13 +1781,12 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		nPtr->PointerMoved = pScrn->PointerMoved;
 		pScrn->PointerMoved = neoPointerMoved;
 	    }
-	    
-	   switch(pScrn->bitsPerPixel) {
-	   case 8:	nPtr->refreshArea = neoRefreshArea8;	break;
-	   case 16:	nPtr->refreshArea = neoRefreshArea16;	break;
-	   case 24:	nPtr->refreshArea = neoRefreshArea24;	break;
-	   case 32:	nPtr->refreshArea = neoRefreshArea32;	break;
-	   }
+	    switch(pScrn->bitsPerPixel) {
+	    case 8:	nPtr->refreshArea = neoRefreshArea8;	break;
+	    case 16:	nPtr->refreshArea = neoRefreshArea16;	break;
+	    case 24:	nPtr->refreshArea = neoRefreshArea24;	break;
+	    case 32:	nPtr->refreshArea = neoRefreshArea32;	break;
+	    }
 	}
 #if 0
 	ShadowFBInit(pScreen, nPtr->refreshArea);
@@ -1802,6 +1804,9 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
                          CMAP_PALETTED_TRUECOLOR | CMAP_RELOAD_ON_MODE_SWITCH))
 	return FALSE;
 
+	if (pScrn->depth == 16)
+	    xxSetup(pScreen,8, pScrn->depth, NULL, nPtr->accelSync); /*@!@*/
+
     racflag |= RAC_COLORMAP;
     if (nPtr->NeoHWCursorInitialized)
         racflag |= RAC_CURSOR;
@@ -1810,7 +1815,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     NEOInitVideo(pScreen);
 
-    pScreen->SaveScreen = vgaHWSaveScreen;
+    pScreen->SaveScreen = vgaHWSaveScreenWeak();
 
     /* Setup DPMS mode */
     if (nPtr->NeoChipset != NM2070)
@@ -1818,7 +1823,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		     0);
 
     if (!nPtr->noLinear) {
-        pScrn->memPhysBase = (unsigned long)nPtr->NeoFbBase;
+	pScrn->memPhysBase = (unsigned long)nPtr->NeoLinearAddr;
 	pScrn->fbOffset = 0;
     }
     
@@ -1946,7 +1951,8 @@ NEOValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     NEOPtr nPtr = NEOPTR(pScrn);
-
+    int vDisplay = mode->VDisplay * ((mode->Flags & V_DBLSCAN) ? 2 : 1);
+    
     /*
      * Limit the modes to just those allowed by the various NeoMagic
      * chips.  
@@ -1963,7 +1969,7 @@ NEOValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 	if (nPtr->internDisp || !nPtr->externDisp) {
 	    /* Is the mode larger than the LCD panel? */
 	    if ((mode->HDisplay > nPtr->NeoPanelWidth) ||
-		(mode->VDisplay > nPtr->NeoPanelHeight)) {
+		(vDisplay > nPtr->NeoPanelHeight)) {
 		xf86DrvMsg(scrnIndex,X_INFO, "Removing mode (%dx%d) "
 			   "larger than the LCD panel (%dx%d)\n",
 			   mode->HDisplay,
@@ -2674,7 +2680,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
      */
     NeoStd->Attribute[16] = 0x01;
 
-    switch (pScrn->depth) {
+    switch (pScrn->depth) { /*@!@*/
     case  8 :
 	NeoStd->CRTC[0x13] = pScrn->displayWidth >> 3;
 	NeoNew->ExtCRTOffset   = pScrn->displayWidth >> 11;
@@ -3107,7 +3113,7 @@ neo_ddc1(int scrnIndex)
     VGAwCR(0x21,0x00);
     VGAwCR(0x1D,0x01);  /* some Voodoo */ 
     VGAwGR(0xA1,0x2F);
-    ret =  xf86DoEDID_DDC1(scrnIndex,vgaHWddc1SetSpeed,neo_ddc1Read);
+    ret =  xf86DoEDID_DDC1(scrnIndex,vgaHWddc1SetSpeedWeak(),neo_ddc1Read);
     /* undo initialization */
     VGAwCR(0x21,reg1);
     VGAwCR(0x1D,reg2);

@@ -246,7 +246,7 @@ Neo2097AccelInit(ScreenPtr pScreen)
 	return FALSE;
     }
     
-    return(XAAInit(pScreen, infoPtr));
+    return (xaaSetupWrapper(pScreen, infoPtr, pScrn->depth, &nPtr->accelSync));
 }
 
 static void

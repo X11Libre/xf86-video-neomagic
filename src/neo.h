@@ -46,6 +46,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "xaa.h"
 #include "xaalocal.h"		/* XAA internals as we replace some of XAA */
+#include "xaaWrapper.h"
 #include "xf86Cursor.h"
 
 #include "shadowfb.h"
@@ -269,6 +270,7 @@ typedef struct neoRec
     int overlay_offset;
     int videoKey;
     int interlace;
+    SyncFunc accelSync;
 } NEORec, *NEOPtr;
 
 typedef struct {
