@@ -683,7 +683,7 @@ neoFindIsaDevice(GDevPtr dev)
     unsigned char id;
     
     vgaIOBase = (inb(0x3CC) & 0x01) ? 0x3D0 : 0x3B0;
-    /* §§§ Too intrusive ? */
+    /* Â§Â§Â§ Too intrusive ? */
     outw(GRAX, 0x2609); /* Unlock NeoMagic registers */
 
     outb(vgaIOBase + 4, 0x1A);
@@ -1307,7 +1307,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     clockRanges = (ClockRangePtr)xnfcalloc(sizeof(ClockRange), 1);
     clockRanges->next = NULL;
     clockRanges->ClockMulFactor = 1;
-    clockRanges->minClock = 11000;   /* guessed §§§ */
+    clockRanges->minClock = 11000;   /* guessed Â§Â§Â§ */
     clockRanges->maxClock = maxClock;
     clockRanges->clockIndex = -1;		/* programmable */
     if (!nPtr->internDisp && nPtr->externDisp) 
@@ -1364,7 +1364,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     {
        i = xf86ValidateModes(pScrn, pScrn->monitor->Modes,
 			  pScrn->display->modes, clockRanges,
-			  NULL, 256, maxWidth,(8 * pScrn->bitsPerPixel),/*§§§*/
+			  NULL, 256, maxWidth,(8 * pScrn->bitsPerPixel),/*Â§Â§Â§*/
 			  128, maxHeight, pScrn->display->virtualX,
 			  pScrn->display->virtualY, apertureSize,
 			  LOOKUP_BEST_REFRESH);
@@ -1903,7 +1903,7 @@ NEOAdjustFrame(int scrnIndex, int x, int y, int flags)
      * This is a workaround for a higher level bug that causes the cursor
      * to be at the wrong position after a virtual screen resolution change
      */
-    if (nPtr->NeoHWCursorInitialized) { /*§§§ do we still need this?*/
+    if (nPtr->NeoHWCursorInitialized) { /*Â§Â§Â§ do we still need this?*/
 	NeoRepositionCursor();
     }
 #endif
