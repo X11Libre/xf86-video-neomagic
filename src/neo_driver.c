@@ -1818,7 +1818,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		     0);
 
     if (!nPtr->noLinear) {
-        pScrn->memPhysBase = (unsigned long)nPtr->NeoFbBase;
+	pScrn->memPhysBase = (unsigned long)nPtr->NeoLinearAddr;
 	pScrn->fbOffset = 0;
     }
     
@@ -1946,7 +1946,8 @@ NEOValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     NEOPtr nPtr = NEOPTR(pScrn);
-
+    int vDisplay = mode->VDisplay * ((mode->Flags & V_DBLSCAN) ? 2 : 1);
+    
     /*
      * Limit the modes to just those allowed by the various NeoMagic
      * chips.  
@@ -1963,7 +1964,7 @@ NEOValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 	if (nPtr->internDisp || !nPtr->externDisp) {
 	    /* Is the mode larger than the LCD panel? */
 	    if ((mode->HDisplay > nPtr->NeoPanelWidth) ||
-		(mode->VDisplay > nPtr->NeoPanelHeight)) {
+		(vDisplay > nPtr->NeoPanelHeight)) {
 		xf86DrvMsg(scrnIndex,X_INFO, "Removing mode (%dx%d) "
 			   "larger than the LCD panel (%dx%d)\n",
 			   mode->HDisplay,
