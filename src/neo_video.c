@@ -26,7 +26,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /*
  * Copyright 2002 SuSE Linux AG, Author: Egbert Eich
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_video.c,v 1.6tsi Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_video.c,v 1.5 2003/04/23 21:51:40 tsi Exp $ */
 
 #include "neo.h"
 #include "neo_video.h"
@@ -252,7 +252,7 @@ NEOSetupVideo(ScreenPtr pScreen)
     pPriv->interlace = nPtr->interlace;
     pPriv->videoStatus = 0;
     pPriv->brightness = 0;
-    REGION_NULL(pScreen, &pPriv->clip);
+    REGION_INIT(pScreen, &pPriv->clip, NullBox, 0);
     nPtr->overlayAdaptor = overlayAdaptor;
 
     xvBrightness = MAKE_ATOM("XV_BRIGHTNESS");
@@ -986,7 +986,7 @@ NEOAllocSurface(ScrnInfoPtr pScrn, int id,
 		unsigned short width, unsigned short height,
 		XF86SurfacePtr surface)
 {
-    int pitch, size;
+    int pitch, bpp, size;
     NEOOffscreenPtr pPriv;
     FBLinearPtr linear;
 
@@ -998,6 +998,7 @@ NEOAllocSurface(ScrnInfoPtr pScrn, int id,
     }
 
     width = (width + 1) & ~1;
+    bpp = ((pScrn->bitsPerPixel + 1) >> 3);
     pitch = ((width << 1) + 15) & ~15;
     size = pitch * height;
 
@@ -1096,7 +1097,7 @@ NEODisplaySurface(XF86SurfacePtr surface,
     
     pPriv->isOn = TRUE;
     if (portPriv->videoStatus & CLIENT_VIDEO_ON){
-	REGION_EMPTY(surface->pScrn->pScreen, &portPriv->clip);
+	REGION_EMPTY(pScrn->pScreen, &portPriv->clip);
 	UpdateCurrentTime();
 	portPriv->videoStatus = FREE_TIMER;
 	portPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
