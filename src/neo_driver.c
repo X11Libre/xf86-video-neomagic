@@ -1815,7 +1815,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     NEOInitVideo(pScreen);
 
-    pScreen->SaveScreen = LoaderSymbol("vgaHWSaveScreen");
+    pScreen->SaveScreen = vgaHWSaveScreenWeak();
 
     /* Setup DPMS mode */
     if (nPtr->NeoChipset != NM2070)
@@ -3113,8 +3113,7 @@ neo_ddc1(int scrnIndex)
     VGAwCR(0x21,0x00);
     VGAwCR(0x1D,0x01);  /* some Voodoo */ 
     VGAwGR(0xA1,0x2F);
-    ret =  xf86DoEDID_DDC1(scrnIndex,LoaderSymbol("vgaHWddc1SetSpeed"),
-                           neo_ddc1Read);
+    ret =  xf86DoEDID_DDC1(scrnIndex,vgaHWddc1SetSpeedWeak(),neo_ddc1Read);
     /* undo initialization */
     VGAwCR(0x21,reg1);
     VGAwCR(0x1D,reg2);
