@@ -3103,15 +3103,15 @@ neo_ddc1(int scrnIndex)
     /* initialize chipset */
     reg1 = VGArCR(0x21);
     reg2 = VGArCR(0x1D); 
-    reg3 = VGArCR(0x1A);
+    reg3 = VGArCR(0xA1);
     VGAwCR(0x21,0x00);
     VGAwCR(0x1D,0x01);  /* some Voodoo */ 
-    VGAwGR(0x1A,0x2F);
+    VGAwGR(0xA1,0x2F);
     ret =  xf86DoEDID_DDC1(scrnIndex,vgaHWddc1SetSpeed,neo_ddc1Read);
     /* undo initialization */
     VGAwCR(0x21,reg1);
     VGAwCR(0x1D,reg2);
-    VGAwGR(0x1A,reg3);
+    VGAwGR(0xA1,reg3);
     return ret;
 }
 
