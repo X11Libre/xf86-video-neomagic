@@ -430,10 +430,10 @@ static const char *vgahwSymbols[] = {
     "vgaHWProtect",
     "vgaHWRestore",
     "vgaHWSave",
-    "vgaHWSaveScreen",
+    "vgaHWSaveScreenWeak",
     "vgaHWSetStdFuncs",
     "vgaHWUnlock",
-    "vgaHWddc1SetSpeed",
+    "vgaHWddc1SetSpeedWeak",
     NULL
 };
 
