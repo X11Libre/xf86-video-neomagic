@@ -26,7 +26,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /*
  * Copyright 2002 SuSE Linux AG, Author: Egbert Eich
  */
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_video.c,v 1.5 2003/04/23 21:51:40 tsi Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_video.c,v 1.6tsi Exp $ */
 
 #include "neo.h"
 #include "neo_video.h"
@@ -82,7 +82,7 @@ NEOInitVideo(ScreenPtr pScreen)
 
     numAdaptors = xf86XVListGenericAdaptors(pScrn, &overlayAdaptors);
 
-    if (nPtr->NeoChipset >= NM2160 
+    if (nPtr->NeoChipset > NM2070 
 	&& !nPtr->noLinear 
 	&& nPtr->NeoMMIOBase2 != NULL){
 	nPtr->video = TRUE;
@@ -252,7 +252,7 @@ NEOSetupVideo(ScreenPtr pScreen)
     pPriv->interlace = nPtr->interlace;
     pPriv->videoStatus = 0;
     pPriv->brightness = 0;
-    REGION_INIT(pScreen, &pPriv->clip, NullBox, 0);
+    REGION_NULL(pScreen, &pPriv->clip);
     nPtr->overlayAdaptor = overlayAdaptor;
 
     xvBrightness = MAKE_ATOM("XV_BRIGHTNESS");
@@ -397,6 +397,9 @@ NEOPutVideo(ScrnInfoPtr pScrn,
 
     switch (nPtr->NeoChipset) {
     default:
+    case NM2090:
+    case NM2093:
+    case NM2097:
     case NM2160: 
 	offset/=2;
 	OUTGR(0xbc, 0x4f);
@@ -850,6 +853,9 @@ NEODisplayVideo(ScrnInfoPtr pScrn, int id, int offset,
     
     switch (nPtr->NeoChipset) {
     default:
+    case NM2090:
+    case NM2093:
+    case NM2097:
     case NM2160: 
         offset/=2;
 	pitch/=2;
@@ -986,7 +992,7 @@ NEOAllocSurface(ScrnInfoPtr pScrn, int id,
 		unsigned short width, unsigned short height,
 		XF86SurfacePtr surface)
 {
-    int pitch, bpp, size;
+    int pitch, size;
     NEOOffscreenPtr pPriv;
     FBLinearPtr linear;
 
@@ -998,7 +1004,6 @@ NEOAllocSurface(ScrnInfoPtr pScrn, int id,
     }
 
     width = (width + 1) & ~1;
-    bpp = ((pScrn->bitsPerPixel + 1) >> 3);
     pitch = ((width << 1) + 15) & ~15;
     size = pitch * height;
 
@@ -1097,7 +1102,7 @@ NEODisplaySurface(XF86SurfacePtr surface,
     
     pPriv->isOn = TRUE;
     if (portPriv->videoStatus & CLIENT_VIDEO_ON){
-	REGION_EMPTY(pScrn->pScreen, &portPriv->clip);
+	REGION_EMPTY(surface->pScrn->pScreen, &portPriv->clip);
 	UpdateCurrentTime();
 	portPriv->videoStatus = FREE_TIMER;
 	portPriv->freeTime = currentTime.milliseconds + FREE_DELAY;
