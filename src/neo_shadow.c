@@ -1,4 +1,4 @@
-/* $XFree86$ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_shadow.c,v 1.3 2001/06/14 02:23:49 keithp Exp $ */
 
 /*
    Copyright (c) 1999, 2000 The XFree86 Project Inc. 
