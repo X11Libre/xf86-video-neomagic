@@ -30,7 +30,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * Copyright 2002 Shigehiro Nomura
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_driver.c,v 1.69 2003/08/23 15:03:03 dawes Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_driver.c,v 1.74 2003/12/31 05:07:30 dawes Exp $ */
 
 /*
  * The original Precision Insight driver for
@@ -123,8 +123,8 @@ static Bool     NEOEnterVT(int scrnIndex, int flags);
 static void     NEOLeaveVT(int scrnIndex, int flags);
 static Bool     NEOCloseScreen(int scrnIndex, ScreenPtr pScreen);
 static void     NEOFreeScreen(int scrnIndex, int flags);
-static int      NEOValidMode(int scrnIndex, DisplayModePtr mode,
-                                 Bool verbose, int flags);
+static ModeStatus NEOValidMode(int scrnIndex, DisplayModePtr mode,
+                               Bool verbose, int flags);
 
 /* Internally used functions */
 static int      neoFindIsaDevice(GDevPtr dev);
@@ -492,7 +492,7 @@ static XF86ModuleVersionInfo neoVersRec =
 	MODULEVENDORSTRING,
 	MODINFOSTRING1,
 	MODINFOSTRING2,
-	XF86_VERSION_CURRENT,
+	XORG_VERSION_CURRENT,
 	NEO_MAJOR_VERSION, NEO_MINOR_VERSION, NEO_PATCHLEVEL,
 	ABI_CLASS_VIDEODRV,
 	ABI_VIDEODRV_VERSION,
@@ -1195,7 +1195,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	/* XXX Check this matches a PCI base address */
 	nPtr->NeoLinearAddr = nPtr->pEnt->device->MemBase;
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
-		   "FB base address is set at 0x%X.\n",
+		   "FB base address is set at 0x%lX.\n",
 		   nPtr->NeoLinearAddr);
     } else {
 	nPtr->NeoLinearAddr = 0;
@@ -1207,7 +1207,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	/* XXX Check this matches a PCI base address */
 	nPtr->NeoMMIOAddr = nPtr->pEnt->device->IOBase;
 	xf86DrvMsg(pScrn->scrnIndex, X_CONFIG,
-		   "MMIO base address is set at 0x%X.\n",
+		   "MMIO base address is set at 0x%lX.\n",
 		   nPtr->NeoMMIOAddr);
     } else {
 	nPtr->NeoMMIOAddr = 0;
@@ -1217,7 +1217,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	if (!nPtr->NeoLinearAddr) {
 	    nPtr->NeoLinearAddr = nPtr->PciInfo->memBase[0];
 	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-		       "FB base address is set at 0x%X.\n",
+		       "FB base address is set at 0x%lX.\n",
 		       nPtr->NeoLinearAddr);
 	}
 	if (!nPtr->NeoMMIOAddr && !nPtr->noMMIO) {
@@ -1240,11 +1240,11 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 		break;
 	    }
 	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-		       "MMIO base address is set at 0x%X.\n",
+		       "MMIO base address is set at 0x%lX.\n",
 		       nPtr->NeoMMIOAddr);
 	    if (nPtr->NeoMMIOAddr2 != 0){
 	        xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-		           "MMIO base address2 is set at 0x%X.\n",
+		           "MMIO base address2 is set at 0x%lX.\n",
 		           nPtr->NeoMMIOAddr2);
 	    }
 	}
@@ -1262,13 +1262,13 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	    VGAwGR(0x09,0x00);
 	    nPtr->NeoLinearAddr = addr << 20;
 	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-		       "FB base address is set at 0x%X.\n",
+		       "FB base address is set at 0x%lX.\n",
 		       nPtr->NeoLinearAddr);
 	}
 	if (!nPtr->NeoMMIOAddr && !nPtr->noMMIO) {
 	    nPtr->NeoMMIOAddr = nPtr->NeoLinearAddr + 0x100000;
 	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-		       "MMIO base address is set at 0x%X.\n",
+		       "MMIO base address is set at 0x%lX.\n",
 		       nPtr->NeoMMIOAddr);
 	}
 	linearRes[0].rBegin = nPtr->NeoLinearAddr;
@@ -1322,14 +1322,41 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	nPtr->NeoCursorMem = 0;
     apertureSize = (pScrn->videoRam * 1024) - nPtr->NeoCursorMem;
 
-   if ((nPtr->NeoPanelWidth == 800) && (nPtr->NeoPanelHeight == 480)) {
-       neo800x480Mode.next = pScrn->monitor->Modes;
-       pScrn->monitor->Modes = &neo800x480Mode;
-   }
-   if ((nPtr->NeoPanelWidth == 1024) && (nPtr->NeoPanelHeight == 480)) {
-       neo1024x480Mode.next = pScrn->monitor->Modes;
-       pScrn->monitor->Modes = &neo1024x480Mode;
-   }
+    if ((nPtr->NeoPanelWidth == 800) && (nPtr->NeoPanelHeight == 480)) {
+	neo800x480Mode.next = pScrn->monitor->Modes;
+	pScrn->monitor->Modes = &neo800x480Mode;
+    }
+    if ((nPtr->NeoPanelWidth == 1024) && (nPtr->NeoPanelHeight == 480)) {
+	neo1024x480Mode.next = pScrn->monitor->Modes;
+	pScrn->monitor->Modes = &neo1024x480Mode;
+    }
+
+    if (!pScrn->monitor->DDC) {
+	/*
+	 * If the monitor parameters are not specified explicitly, set them
+	 * so that 60Hz modes up to the panel size are allowed.
+	 */
+	if (pScrn->monitor->nHsync == 0) {
+	    pScrn->monitor->nHsync = 1;
+	    pScrn->monitor->hsync[0].lo = 28;
+	    pScrn->monitor->hsync[0].hi =
+				60.0 * 1.07 * nPtr->NeoPanelHeight / 1000.0;
+	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
+		       "Using hsync range matching panel size: %.2f-%.2f kHz\n",
+		       pScrn->monitor->hsync[0].lo,
+		       pScrn->monitor->hsync[0].hi);
+	}
+	if (pScrn->monitor->nVrefresh == 0) {
+	    pScrn->monitor->nVrefresh = 1;
+	    pScrn->monitor->vrefresh[0].lo = 55.0;
+	    pScrn->monitor->vrefresh[0].hi = 65.0;
+	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
+		       "Using vsync range for panel: %.2f-%.2f kHz\n",
+		       pScrn->monitor->vrefresh[0].lo,
+		       pScrn->monitor->vrefresh[0].hi);
+	}
+    }
+
     /*
      * For external displays, limit the width to 1024 pixels or less.
      */
@@ -1783,7 +1810,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 
     NEOInitVideo(pScreen);
 
-    pScreen->SaveScreen = vgaHWSaveScreen;
+    pScreen->SaveScreen = LoaderSymbol("vgaHWSaveScreen");
 
     /* Setup DPMS mode */
     if (nPtr->NeoChipset != NM2070)
@@ -1791,7 +1818,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 		     0);
 
     if (!nPtr->noLinear) {
-        pScrn->memPhysBase = (unsigned long)nPtr->NeoFbBase;
+	pScrn->memPhysBase = (unsigned long)nPtr->NeoLinearAddr;
 	pScrn->fbOffset = 0;
     }
     
@@ -1914,12 +1941,13 @@ NEOFreeScreen(int scrnIndex, int flags)
 }
 
 /* Optional */
-static int
+static ModeStatus
 NEOValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 {
     ScrnInfoPtr pScrn = xf86Screens[scrnIndex];
     NEOPtr nPtr = NEOPTR(pScrn);
-
+    int vDisplay = mode->VDisplay * ((mode->Flags & V_DBLSCAN) ? 2 : 1);
+    
     /*
      * Limit the modes to just those allowed by the various NeoMagic
      * chips.  
@@ -1936,7 +1964,7 @@ NEOValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
 	if (nPtr->internDisp || !nPtr->externDisp) {
 	    /* Is the mode larger than the LCD panel? */
 	    if ((mode->HDisplay > nPtr->NeoPanelWidth) ||
-		(mode->VDisplay > nPtr->NeoPanelHeight)) {
+		(vDisplay > nPtr->NeoPanelHeight)) {
 		xf86DrvMsg(scrnIndex,X_INFO, "Removing mode (%dx%d) "
 			   "larger than the LCD panel (%dx%d)\n",
 			   mode->HDisplay,
@@ -2148,7 +2176,7 @@ neoSave(ScrnInfoPtr pScrn)
         save->reg = (regSavePtr)xnfcalloc(sizeof(regSaveRec), 1);
     else
         xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		   "Non-NULL reg in NeoSave: reg=0x%08X\n", save->reg);
+		   "Non-NULL reg in NeoSave: reg=%p\n", (void *)save->reg);
 
     save->reg->CR[0x23] = VGArCR(0x23);
     save->reg->CR[0x25] = VGArCR(0x25);
@@ -2914,7 +2942,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
      */
     if (NeoNew->reg) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		   "Non-NULL reg in NeoInit: reg=0x%08X\n", NeoNew->reg);
+		   "Non-NULL reg in NeoInit: reg=%p\n", (void *)NeoNew->reg);
 	xfree(NeoNew->reg);
 	NeoNew->reg = NULL;
     }
@@ -3076,14 +3104,16 @@ neo_ddc1(int scrnIndex)
     /* initialize chipset */
     reg1 = VGArCR(0x21);
     reg2 = VGArCR(0x1D); 
-    reg3 = VGArCR(0x1A);
+    reg3 = VGArCR(0xA1);
     VGAwCR(0x21,0x00);
     VGAwCR(0x1D,0x01);  /* some Voodoo */ 
     VGAwGR(0xA1,0x2F);
-    ret =  xf86DoEDID_DDC1(scrnIndex,vgaHWddc1SetSpeed,neo_ddc1Read);
+    ret =  xf86DoEDID_DDC1(scrnIndex,LoaderSymbol("vgaHWddc1SetSpeed"),
+                           neo_ddc1Read);
     /* undo initialization */
     VGAwCR(0x21,reg1);
     VGAwCR(0x1D,reg2);
+    VGAwGR(0xA1,reg3);
     return ret;
 }
 
