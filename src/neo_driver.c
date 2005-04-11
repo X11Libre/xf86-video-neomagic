@@ -1312,9 +1312,6 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     clockRanges->minClock = 11000;   /* guessed §§§ */
     clockRanges->maxClock = maxClock;
     clockRanges->clockIndex = -1;		/* programmable */
-    if (!nPtr->internDisp && nPtr->externDisp) 
-	clockRanges->interlaceAllowed = TRUE; 
-    else
 	clockRanges->interlaceAllowed = FALSE; 
     clockRanges->doubleScanAllowed = TRUE;
 
@@ -1955,6 +1952,13 @@ NEOValidMode(int scrnIndex, DisplayModePtr mode, Bool verbose, int flags)
     NEOPtr nPtr = NEOPTR(pScrn);
     int vDisplay = mode->VDisplay * ((mode->Flags & V_DBLSCAN) ? 2 : 1);
     
+    /*
+     * Is there any LineCompare Bit 10? Where?
+     * The 9 well known VGA bits give us a maximum height of 1024
+     */
+    if (vDisplay > 1024)
+	return MODE_BAD;
+
     /*
      * Limit the modes to just those allowed by the various NeoMagic
      * chips.  
@@ -2645,7 +2649,6 @@ neoRestore(ScrnInfoPtr pScrn, vgaRegPtr VgaReg, NeoRegPtr restore,
     }
     
     vgaHWProtect(pScrn, FALSE);		/* Turn on screen */
-
 }
     
 static Bool
@@ -2713,7 +2716,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     NeoNew->VerticalExt = (((mode->CrtcVTotal -2) & 0x400) >> 10 )
       | (((mode->CrtcVDisplay -1) & 0x400) >> 9 )
         | (((mode->CrtcVSyncStart) & 0x400) >> 8 )
-          | (((mode->CrtcVSyncStart) & 0x400) >> 7 );
+          | (((mode->CrtcVBlankStart - 1) & 0x400) >> 7 );
 
     /* Fast write bursts on unless disabled. */
     if (nPtr->onPciBurst) {
@@ -2935,7 +2938,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 	nPtr->videoHZoom = 1.0;
 	nPtr->videoVZoom = 1.0;
     }
-
+    /* Do double scan */
     if (mode->VDisplay < 480) {
 	NeoStd->Sequencer[1] |= 0x8;
 	clockMul = 2;
@@ -2986,13 +2989,13 @@ neoCalcVCLK(ScrnInfoPtr pScrn, long freq)
     int n, d, f;
     double f_out;
     double f_diff;
-    int n_best = 0, d_best = 0, f_best = 0;
+    int n_best = 0, d_best = 1, f_best = 0;
     double f_best_diff = 999999.0;
     double f_target = freq/1000.0;
 
     for (f = 0; f <= MAX_F; f++)
 	for (n = 0; n <= MAX_N; n++)
-	    for (d = 0; d <= MAX_D; d++) {
+	    for (d = 1; d <= MAX_D; d++) {
 		f_out = (n+1.0)/((d+1.0)*(1<<f))*REF_FREQ;
 		f_diff = abs(f_out-f_target);
 		if (f_diff < f_best_diff) {
