@@ -22,7 +22,7 @@ RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
 CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
 CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 **********************************************************************/
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_video.h,v 1.2 2002/07/01 02:25:58 tsi Exp $ */
+/* $XFree86$ */
 
 #ifndef _NEO_VIDEO_H
 #define _NEO_VIDEO_H
@@ -31,7 +31,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 #include "vgaHW.h"
 #include "fourcc.h"
-#include "Xv.h"
+#include <X11/extensions/Xv.h>
 
 #define NEO_VIDEO_VIDEO		0
 #define NEO_VIDEO_IMAGE		1
