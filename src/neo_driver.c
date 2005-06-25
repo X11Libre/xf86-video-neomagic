@@ -287,7 +287,7 @@ static DisplayModeRec neo1024x480Mode = {
  * an upper-case version of the driver name.
  */
 
-DriverRec NEOMAGIC = {
+_X_EXPORT DriverRec NEOMAGIC = {
     VERSION,
     NEO_DRIVER_NAME,
     NEOIdentify,
@@ -507,7 +507,7 @@ static XF86ModuleVersionInfo neoVersRec =
  * This is the module init data.
  * Its name has to be the driver name followed by ModuleData
  */
-XF86ModuleData neomagicModuleData = { &neoVersRec, neoSetup, NULL };
+_X_EXPORT XF86ModuleData neomagicModuleData = { &neoVersRec, neoSetup, NULL };
 
 static pointer
 neoSetup(pointer module, pointer opts, int *errmaj, int *errmin)
