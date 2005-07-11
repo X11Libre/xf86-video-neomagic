@@ -1,9 +1,13 @@
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_shadow.c,v 1.3 2001/06/14 02:23:49 keithp Exp $ */
+/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_shadow.c,v 1.2 2000/11/03 18:46:11 eich Exp $ */
 
 /*
    Copyright (c) 1999, 2000 The XFree86 Project Inc. 
    based on code written by Mark Vojkovich <markv@valinux.com>
 */
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
 
 #include "xf86.h"
 #include "xf86_OSproc.h"
