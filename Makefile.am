@@ -21,4 +21,4 @@
 AUTOMAKE_OPTIONS = foreign
 SUBDIRS = src man
 
-EXTRA_DIST = nm-REG.TXT TODO
+EXTRA_DIST = NM-reg.txt TODO
