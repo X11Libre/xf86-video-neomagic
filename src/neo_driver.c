@@ -160,7 +160,7 @@ static int      neoFindMode(int xres, int yres, int depth);
 
 #define NEO_MAJOR_VERSION 1
 #define NEO_MINOR_VERSION 1
-#define NEO_PATCHLEVEL 0
+#define NEO_PATCHLEVEL 1
 
 /*
  * This is intentionally screen-independent.  It indicates the binding
