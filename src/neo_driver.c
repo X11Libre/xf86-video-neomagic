@@ -158,9 +158,9 @@ static int      neoFindMode(int xres, int yres, int depth);
 #define NEO_NAME "NEOMAGIC"
 #define NEO_DRIVER_NAME "neomagic"
 
-#define NEO_MAJOR_VERSION 1
-#define NEO_MINOR_VERSION 1
-#define NEO_PATCHLEVEL 1
+#define NEO_MAJOR_VERSION PACKAGE_VERSION_MAJOR
+#define NEO_MINOR_VERSION PACKAGE_VERSION_MINOR
+#define NEO_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
 
 /*
  * This is intentionally screen-independent.  It indicates the binding
