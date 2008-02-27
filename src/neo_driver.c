@@ -2148,16 +2148,30 @@ neoUnmapMem(ScrnInfoPtr pScrn)
     NEOPtr nPtr = NEOPTR(pScrn);
 
     if (!nPtr->noLinear) {
+#ifndef XSERVER_LIBPCIACCESS
       if (nPtr->NeoMMIOBase)
 	  xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase,
 			  0x200000L);
+#else
+      if (nPtr->NeoMMIOBase)
+	  pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase, 0x200000L);
+#endif
       nPtr->NeoMMIOBase = NULL;
+#ifndef XSERVER_LIBPCIACCESS
       if (nPtr->NeoMMIOBase2)
 	  xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase2,
 			  0x100000L);
+#else
+      if (nPtr->NeoMMIOBase2)
+	  pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase2, 0x100000L);
+#endif
       nPtr->NeoMMIOBase2 = NULL;
+#ifndef XSERVER_LIBPCIACCESS
       xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoFbBase,
 		    nPtr->NeoFbMapSize); 
+#else
+      pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoFbBase, nPtr->NeoFbMapSize);
+#endif
     }
     nPtr->NeoFbBase = NULL;
     
