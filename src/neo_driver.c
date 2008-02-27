@@ -778,9 +778,11 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	/* This driver can handle ISA and PCI buses */
 	if (nPtr->pEnt->location.type == BUS_PCI) {
 	    nPtr->PciInfo = xf86GetPciInfoForEntity(nPtr->pEnt->index);
+#ifndef XSERVER_LIBPCIACCESS
 	    nPtr->PciTag = pciTag(nPtr->PciInfo->bus, 
 				  nPtr->PciInfo->device,
 				  nPtr->PciInfo->func);
+#endif
 	}
     }
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Chipset is a ");
@@ -1221,7 +1223,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	
     if (nPtr->pEnt->location.type == BUS_PCI) {
 	if (!nPtr->NeoLinearAddr) {
-	    nPtr->NeoLinearAddr = nPtr->PciInfo->memBase[0];
+	    nPtr->NeoLinearAddr = PCI_REGION_BASE(nPtr->PciInfo, 0, REGION_MEM);
 	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
 		       "FB base address is set at 0x%lX.\n",
 		       nPtr->NeoLinearAddr);
@@ -1241,8 +1243,8 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	    case NM2230:
 	    case NM2360:
 	    case NM2380:
-		nPtr->NeoMMIOAddr = nPtr->PciInfo->memBase[1];
-		nPtr->NeoMMIOAddr2 = nPtr->PciInfo->memBase[2];
+		nPtr->NeoMMIOAddr = PCI_REGION_BASE(nPtr->PciInfo, 1, REGION_MEM);
+		nPtr->NeoMMIOAddr2 = PCI_REGION_BASE(nPtr->PciInfo, 2, REGION_MEM);
 		break;
 	    }
 	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
@@ -2057,6 +2059,8 @@ neoMapMem(ScrnInfoPtr pScrn)
     if (!nPtr->noLinear) {
 	if (!nPtr->noMMIO) {
 	    if (nPtr->pEnt->location.type == BUS_PCI){
+
+#ifndef XSERVER_LIBPCIACCESS
 		nPtr->NeoMMIOBase =
 		    xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
 				  nPtr->PciTag, nPtr->NeoMMIOAddr,
@@ -2067,6 +2071,29 @@ neoMapMem(ScrnInfoPtr pScrn)
 				      nPtr->PciTag, nPtr->NeoMMIOAddr2,
 				      0x100000L);
 		}
+
+#else
+		void** result = (void**)&nPtr->NeoMMIOBase;
+		int err = pci_device_map_range(nPtr->PciInfo,
+					       nPtr->NeoMMIOAddr,
+					       0x200000L,
+					       PCI_DEV_MAP_FLAG_WRITABLE,
+					       result);
+		if (err)
+		    return FALSE;
+		
+		if (nPtr->NeoMMIOAddr2 != 0){
+		    result = (void**)&nPtr->NeoMMIOBase2;
+		    int err = pci_device_map_range(nPtr->PciInfo,
+						   nPtr->NeoMMIOAddr2,
+						   0x100000L,
+						   PCI_DEV_MAP_FLAG_WRITABLE,
+						   result);
+
+		    if (err) 
+			return FALSE;
+		}
+#endif
 	    } else
 		nPtr->NeoMMIOBase =
 		    xf86MapVidMem(pScrn->scrnIndex,
@@ -2077,11 +2104,26 @@ neoMapMem(ScrnInfoPtr pScrn)
 	}
 
 	if (nPtr->pEnt->location.type == BUS_PCI)
+
+#ifndef XSERVER_LIBPCIACCESS
 	    nPtr->NeoFbBase =
 		xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
 			      nPtr->PciTag,
 			      (unsigned long)nPtr->NeoLinearAddr,
 			      nPtr->NeoFbMapSize);
+#else
+	{
+	    void** result = (void**)&nPtr->NeoFbBase;
+	    int err = pci_device_map_range(nPtr->PciInfo,
+					   nPtr->NeoLinearAddr,
+					   nPtr->NeoFbMapSize,
+					   PCI_DEV_MAP_FLAG_WRITABLE |
+					   PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+					   result);
+	    if (err)
+		return FALSE;
+	}
+#endif
 	else
 	    nPtr->NeoFbBase =
 		xf86MapVidMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,

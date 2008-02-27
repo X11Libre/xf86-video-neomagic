@@ -37,6 +37,9 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
 #include <string.h>
+
+#include "neo_pcirename.h"
+
 /* All drivers should typically include these */
 #include "xf86.h"
 #include "xf86_OSproc.h"
@@ -201,7 +204,9 @@ typedef struct neoRec
 {
     int NeoChipset;
     pciVideoPtr PciInfo;
+#ifndef XSERVER_LIBPCIACCESS
     PCITAG      PciTag;
+#endif
     EntityInfoPtr pEnt;
     XAAInfoRecPtr	AccelInfoRec;
     NEOACLRec Accel;
