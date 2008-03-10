@@ -612,7 +612,10 @@ NEOProbe(DriverPtr drv, int flags)
     }
   
     /* PCI BUS */
-    if (xf86GetPciVideoInfo() ) {
+#ifndef XSERVER_LIBPCIACCESS
+    if (xf86GetPciVideoInfo() )
+#endif
+    {
 	numUsed = xf86MatchPciInstances(NEO_NAME, PCI_VENDOR_NEOMAGIC,
 					NEOChipsets, NEOPCIchipsets, 
 					devSections,numDevSections,
