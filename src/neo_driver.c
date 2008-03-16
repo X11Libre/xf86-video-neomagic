@@ -2083,7 +2083,7 @@ neoMapMem(ScrnInfoPtr pScrn)
 		
 		if (nPtr->NeoMMIOAddr2 != 0){
 		    result = (void**)&nPtr->NeoMMIOBase2;
-		    int err = pci_device_map_range(nPtr->PciInfo,
+		    err = pci_device_map_range(nPtr->PciInfo,
 						   nPtr->NeoMMIOAddr2,
 						   0x100000L,
 						   PCI_DEV_MAP_FLAG_WRITABLE,

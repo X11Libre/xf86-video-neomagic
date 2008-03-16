@@ -26,8 +26,8 @@
  * library. The main purpose being to facilitate source code compatibility.
  */
 
-#ifndef CIRPCIRENAME_H
-#define CIRPCIRENAME_H
+#ifndef NEOPCIRENAME_H
+#define NEOPCIRENAME_H
 
 enum region_type {
     REGION_MEM,
@@ -119,4 +119,4 @@ typedef struct pci_device *pciVideoPtr;
 
 #endif /* XSERVER_LIBPCIACCESS */
 
-#endif /* CIRPCIRENAME_H */
+#endif /* NEOPCIRENAME_H */
