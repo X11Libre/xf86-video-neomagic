@@ -30,7 +30,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  * Copyright 2002 Shigehiro Nomura
  */
 
-/* $XFree86: xc/programs/Xserver/hw/xfree86/drivers/neomagic/neo_driver.c,v 1.74 2003/12/31 05:07:30 dawes Exp $ */
 
 /*
  * The original Precision Insight driver for
