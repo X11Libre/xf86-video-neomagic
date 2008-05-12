@@ -1810,9 +1810,6 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
                          CMAP_PALETTED_TRUECOLOR | CMAP_RELOAD_ON_MODE_SWITCH))
 	return FALSE;
 
-	if (pScrn->depth == 16)
-	    xxSetup(pScreen,8, pScrn->depth, NULL, nPtr->accelSync); /*@!@*/
-
     racflag |= RAC_COLORMAP;
     if (nPtr->NeoHWCursorInitialized)
         racflag |= RAC_CURSOR;
