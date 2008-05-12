@@ -83,7 +83,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "xf86cmap.h"
 
 #include "fb.h"
-#include "fbpseudocolor.h"
 
 /* Needed by Resources Access Control (RAC) */
 #include "xf86RAC.h"
