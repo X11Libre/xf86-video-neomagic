@@ -62,9 +62,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
-/* This is used for module versioning */
-#include "xf86Version.h"
-
 /* All drivers using the vgahw module need this */
 #include "vgaHW.h"
 
