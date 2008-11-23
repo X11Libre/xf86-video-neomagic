@@ -322,6 +322,7 @@ static PciChipsets NEOPCIchipsets[] = {
     { -1,	     -1,	     RES_UNDEFINED}
 };
 
+#ifdef HAVE_ISA
 static IsaChipsets NEOISAchipsets[] = {
     { NM2070,               RES_EXCLUSIVE_VGA },
     { NM2090,               RES_EXCLUSIVE_VGA },
@@ -331,6 +332,7 @@ static IsaChipsets NEOISAchipsets[] = {
     { NM2200,               RES_EXCLUSIVE_VGA },
     { -1,			RES_UNDEFINED }
 };
+#endif
 
 /* The options supported by the Neomagic Driver */
 typedef enum {
@@ -643,7 +645,8 @@ NEOProbe(DriverPtr drv, int flags)
 	    xfree(usedChips);
 	}
     }
-    
+
+#ifdef HAVE_ISA 
     /* Isa Bus */
 
     numUsed = xf86MatchIsaInstances(NEO_NAME,NEOChipsets,NEOISAchipsets,
@@ -674,11 +677,13 @@ NEOProbe(DriverPtr drv, int flags)
       }
       xfree(usedChips);
     }
+#endif
 
     xfree(devSections);
     return foundScreen;
 }
 
+#ifdef HAVE_ISA
 static int
 neoFindIsaDevice(GDevPtr dev)
 {
@@ -705,7 +710,7 @@ neoFindIsaDevice(GDevPtr dev)
 	return -1;
     }
 }
-
+#endif
 
 /* Mandatory */
 Bool
