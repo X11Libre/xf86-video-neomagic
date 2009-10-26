@@ -114,6 +114,8 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/extensions/xf86dgastr.h>
 #endif
 
+#include <unistd.h>
+
 /* Mandatory functions */
 static const OptionInfoRec *	NEOAvailableOptions(int chipid, int busid);
 static void     NEOIdentify(int flags);
@@ -2489,7 +2491,7 @@ neoRestore(ScrnInfoPtr pScrn, vgaRegPtr VgaReg, NeoRegPtr restore,
      * In some rare cases a lockup might occur if we don't delay
      * here. (Reported by Miles Lane)
      */
-    xf86UDelay(200000);
+    usleep(200000);
     /*
      * Disable horizontal and vertical graphics and text expansions so
      * that vgaHWRestore works properly.
@@ -2502,7 +2504,7 @@ neoRestore(ScrnInfoPtr pScrn, vgaRegPtr VgaReg, NeoRegPtr restore,
      * Sleep for 200ms to make sure that the two operations above have
      * had time to take effect.
      */
-    xf86UDelay(200000);
+    usleep(200000);
     /*
      * This function handles restoring the generic VGA registers.  */
     vgaHWRestore(pScrn, VgaReg,
