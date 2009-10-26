@@ -23,3 +23,9 @@ SUBDIRS = src man
 
 EXTRA_DIST = NM-reg.txt TODO
 
+.PHONY: ChangeLog
+
+ChangeLog:
+	$(CHANGELOG_CMD)
+
+dist-hook: ChangeLog
