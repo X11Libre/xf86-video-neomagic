@@ -107,11 +107,6 @@ extern Bool NeoCursorInit(ScreenPtr pScrn);
 extern void NeoShowCursor(ScrnInfoPtr pScrn);
 extern void NeoHideCursor(ScrnInfoPtr pScrn);
 
-/* in neo_bank.c */
-int NEOSetReadWrite(ScreenPtr pScreen, int bank);
-int NEOSetWrite(ScreenPtr pScreen, int bank);
-int NEOSetRead(ScreenPtr pScreen, int bank);
-
 /* in neo_i2c.c */
 extern Bool neo_I2CInit(ScrnInfoPtr pScrn);
 
@@ -237,7 +232,6 @@ typedef struct neoRec
     int NeoPanelHeight;
     /* options */
     OptionInfoPtr Options;
-    Bool noLinear;
     Bool noAccel;
     Bool noAccelSet;
     Bool swCursor;

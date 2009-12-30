@@ -75,9 +75,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* All drivers implementing backing store need this */
 #include "mibstore.h"
 
-/* All drivers using the mi banking wrapper need this */
-#include "mibank.h"
-
 /* All drivers using the mi colormap manipulation need this */
 #include "micmap.h"
 
@@ -335,7 +332,6 @@ static IsaChipsets NEOISAchipsets[] = {
 
 /* The options supported by the Neomagic Driver */
 typedef enum {
-    OPTION_NOLINEAR_MODE,
     OPTION_NOACCEL,
     OPTION_SW_CURSOR,
     OPTION_NO_MMIO,
@@ -383,7 +379,6 @@ static const OptionInfoRec NEO_2070_Options[] = {
 };
 
 static const OptionInfoRec NEOOptions[] = {
-    { OPTION_NOLINEAR_MODE,"NoLinear",  OPTV_BOOLEAN,	{0}, FALSE },
     { OPTION_NOACCEL,	"NoAccel",	OPTV_BOOLEAN,	{0}, FALSE },
     { OPTION_SW_CURSOR,	"SWcursor",	OPTV_BOOLEAN,	{0}, FALSE },
     { OPTION_NO_MMIO,	"noMMIO",	OPTV_BOOLEAN,	{0}, FALSE },
@@ -956,7 +951,6 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 
     xf86ProcessOptions(pScrn->scrnIndex, pScrn->options, nPtr->Options);
 
-    xf86GetOptValBool(nPtr->Options, OPTION_NOLINEAR_MODE,&nPtr->noLinear);
     xf86GetOptValBool(nPtr->Options, OPTION_SW_CURSOR,&nPtr->swCursor);
     xf86GetOptValBool(nPtr->Options, OPTION_NO_MMIO,&nPtr->noMMIO);
     xf86GetOptValBool(nPtr->Options, OPTION_INTERN_DISP,&nPtr->internDisp);
@@ -1082,10 +1076,6 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     if (nPtr->lcdCenter)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG,
 		   "Video modes are centered on the display\n");
-    if (nPtr->noLinear)
-	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG, "using nonlinear mode\n");
-    else
-	xf86DrvMsg(pScrn->scrnIndex,X_DEFAULT, "using linear mode\n");
     if (nPtr->swCursor)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG, "using sofware cursor\n");
     if (nPtr->noMMIO)
@@ -1099,17 +1089,9 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG,
 		   "Show chache for debugging\n");
     if (nPtr->shadowFB) {
-	if (nPtr->noLinear) {
-    	    xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
-		       "Option \"ShadowFB\" ignored. Not supported without"
-		       " linear addressing\n");
-	    nPtr->shadowFB = FALSE;
-	    nPtr->rotate = 0;
-	} else {
-	    nPtr->noAccel = TRUE;
-	    xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, 
-		    "Using \"Shadow Framebuffer\" - acceleration disabled\n");
-	}
+        nPtr->noAccel = TRUE;
+        xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, 
+                "Using \"Shadow Framebuffer\" - acceleration disabled\n");
     }
 
     nPtr->NeoFbMapSize = linearSize * 1024;
@@ -1203,7 +1185,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	linearRes[0].rBegin = nPtr->NeoLinearAddr;
 	linearRes[1].rEnd = nPtr->NeoLinearAddr + nPtr->NeoFbMapSize - 1;
 	if (xf86RegisterResources(nPtr->pEnt->index,linearRes,ResNone)) {
-	    nPtr->noLinear = TRUE; /* XXX */
+	    RETURN;
 	}
     }
 #endif
@@ -1331,10 +1313,8 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	RETURN;
     }
 
-    if (!nPtr->noLinear) {
-	if (!xf86LoadSubModule(pScrn, "xaa")) 
-	    RETURN;
-    }
+    if (!xf86LoadSubModule(pScrn, "xaa")) 
+        RETURN;
 
     if (nPtr->shadowFB) {
 	if (!xf86LoadSubModule(pScrn, "shadow")) {
@@ -1550,134 +1530,105 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     nAcl->UseHWCursor = FALSE;
     nAcl->CursorAddress = -1;
     
-    if (nPtr->noLinear) {
-	miBankInfoPtr pBankInfo;
+    nAcl->cacheStart = -1;
+    nAcl->cacheEnd = -1;
+    xf86DrvMsg(pScrn->scrnIndex,X_INFO,
+               "Using linear framebuffer at: 0x%08lX\n",
+               nPtr->NeoLinearAddr);
+    /* Setup pointers to free space in video ram */
+    allocatebase = (pScrn->videoRam << 10);
+    freespace = allocatebase - pScrn->displayWidth *
+        pScrn->virtualY * (pScrn->bitsPerPixel >> 3);
+    currentaddr = allocatebase;
+    xf86DrvMsg(scrnIndex, X_PROBED,
+               "%d bytes off-screen memory available\n", freespace);
 
-	/* Setup the vga banking variables */
-	pBankInfo = (miBankInfoPtr)xnfcalloc(sizeof(miBankInfoRec),1);
-	if (pBankInfo == NULL)
-	    return FALSE;
-	
-	pBankInfo->pBankA = hwp->Base;
-	pBankInfo->pBankB = (unsigned char *)hwp->Base;
-	pBankInfo->BankSize = 0x10000;
-	pBankInfo->nBankDepth = pScrn->depth;
-	
-	pBankInfo->SetSourceBank = (miBankProcPtr)NEOSetRead;
-	pBankInfo->SetDestinationBank =
-	    (miBankProcPtr)NEOSetWrite;
-	pBankInfo->SetSourceAndDestinationBanks =
-	    (miBankProcPtr)NEOSetReadWrite;
-	if (!miInitializeBanking(pScreen, pScrn->virtualX, pScrn->virtualY,
-				 pScrn->displayWidth, pBankInfo)) {
-	    xfree(pBankInfo);
-	    pBankInfo = NULL;
-	    return FALSE;
-	}
-	xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Using nonlinear mode\n");
-	xf86DrvMsg(pScrn->scrnIndex,X_INFO, "Using software cursor in "
-		   "nonlinear mode\n");
+    if (nPtr->swCursor || !nPtr->NeoMMIOBase) {
+        xf86DrvMsg(scrnIndex, X_CONFIG,
+                   "Using Software Cursor.\n");
+    } else if (nPtr->NeoCursorMem <= freespace) {
+        currentaddr -= nPtr->NeoCursorMem;
+        freespace  -= nPtr->NeoCursorMem;
+        /* alignment */
+        freespace  -= currentaddr & 0x3FF;
+        currentaddr &= 0xfffffc00;
+        nAcl->CursorAddress = currentaddr;
+        xf86DrvMsg(scrnIndex, X_INFO,
+                   "Using H/W Cursor.\n"); 
     } else {
-	nAcl->cacheStart = -1;
-	nAcl->cacheEnd = -1;
-	xf86DrvMsg(pScrn->scrnIndex,X_INFO,
-		   "Using linear framebuffer at: 0x%08lX\n",
-		   nPtr->NeoLinearAddr);
-	/* Setup pointers to free space in video ram */
-	allocatebase = (pScrn->videoRam << 10);
-	freespace = allocatebase - pScrn->displayWidth *
-	    pScrn->virtualY * (pScrn->bitsPerPixel >> 3);
-	currentaddr = allocatebase;
-	xf86DrvMsg(scrnIndex, X_PROBED,
-		   "%d bytes off-screen memory available\n", freespace);
-
-	if (nPtr->swCursor || !nPtr->NeoMMIOBase) {
-	    xf86DrvMsg(scrnIndex, X_CONFIG,
-		       "Using Software Cursor.\n");
-	} else if (nPtr->NeoCursorMem <= freespace) {
-	    currentaddr -= nPtr->NeoCursorMem;
-	    freespace  -= nPtr->NeoCursorMem;
-	    /* alignment */
-	    freespace  -= currentaddr & 0x3FF;
-	    currentaddr &= 0xfffffc00;
-	    nAcl->CursorAddress = currentaddr;
-	    xf86DrvMsg(scrnIndex, X_INFO,
-		       "Using H/W Cursor.\n"); 
-	} else {
-	    xf86DrvMsg(scrnIndex, X_ERROR,
-		       "Too little space for H/W cursor.\n");
-	}
-	
-	if (!nPtr->noAccel && !nPtr->NeoMMIOBase)
-	  xf86DrvMsg(pScrn->scrnIndex,X_INFO,
-		     "Acceleration disabled when not using MMIO\n");
-
-	if (nPtr->overlay > 0){
-	    if (nPtr->overlay > freespace){
-		xf86DrvMsg(pScrn->scrnIndex,X_INFO,
-			   "Can not reserve %d bytes for overlay. "
-			   "Resize to %d bytes.\n",
-			   nPtr->overlay, freespace);
-		nPtr->overlay = freespace;
-	    }
-	    currentaddr -= nPtr->overlay;
-	    freespace -= nPtr->overlay;
-	    nPtr->overlay_offset = currentaddr;
-	    xf86DrvMsg(pScrn->scrnIndex,X_INFO,"Overlay at 0x%x\n",
-		       nPtr->overlay_offset);
-	}
-
-	nAcl->cacheStart = currentaddr - freespace;
-	nAcl->cacheEnd = currentaddr;
-	freespace = 0;
-	if (nAcl->cacheStart < nAcl->cacheEnd) {
-	    BoxRec AvailFBArea;
-	    int lines = nAcl->cacheEnd /
-		(pScrn->displayWidth * (pScrn->bitsPerPixel >> 3));
-	    if (!nPtr->noAccel && nPtr->NeoMMIOBase && lines > 1024) 
-		lines = 1024;
-	    AvailFBArea.x1 = 0;
-	    AvailFBArea.y1 = 0;
-	    AvailFBArea.x2 = pScrn->displayWidth;
-	    AvailFBArea.y2 = lines;
-	    xf86InitFBManager(pScreen, &AvailFBArea); 
-	    
-	    xf86DrvMsg(pScrn->scrnIndex, X_INFO, 
-		       "Using %i scanlines of offscreen memory \n",
-		       lines - pScrn->virtualY);
-	}
-
-	/* Setup the acceleration primitives */
-	if (!nPtr->noAccel && nPtr->NeoMMIOBase) {
-	    Bool ret = FALSE;
-	    if (nAcl->cacheStart >= nAcl->cacheEnd) {
-		xf86DrvMsg(scrnIndex, X_ERROR,
-			   "Too little space for pixmap cache.\n");
-	    } 	    
-	    switch(nPtr->NeoChipset) {
-	    case NM2070 :
-		ret = Neo2070AccelInit(pScreen);
-		break;
-	    case NM2090 :
-	    case NM2093 :
-		ret = Neo2090AccelInit(pScreen);
-		break;
-	    case NM2097 :
-	    case NM2160 :
-		ret = Neo2097AccelInit(pScreen);
-		break;
-	    case NM2200 :
-	    case NM2230 :
-	    case NM2360 :
-	    case NM2380 :
-	        ret = Neo2200AccelInit(pScreen);
-		break;
-	    }
-	    xf86DrvMsg(pScrn->scrnIndex,X_INFO,
-		       "Acceleration %s Initialized\n",ret ? "" : "not");
-	} 
-
+        xf86DrvMsg(scrnIndex, X_ERROR,
+                   "Too little space for H/W cursor.\n");
     }
+    
+    if (!nPtr->noAccel && !nPtr->NeoMMIOBase)
+      xf86DrvMsg(pScrn->scrnIndex,X_INFO,
+                 "Acceleration disabled when not using MMIO\n");
+
+    if (nPtr->overlay > 0){
+        if (nPtr->overlay > freespace){
+            xf86DrvMsg(pScrn->scrnIndex,X_INFO,
+                       "Can not reserve %d bytes for overlay. "
+                       "Resize to %d bytes.\n",
+                       nPtr->overlay, freespace);
+            nPtr->overlay = freespace;
+        }
+        currentaddr -= nPtr->overlay;
+        freespace -= nPtr->overlay;
+        nPtr->overlay_offset = currentaddr;
+        xf86DrvMsg(pScrn->scrnIndex,X_INFO,"Overlay at 0x%x\n",
+                   nPtr->overlay_offset);
+    }
+
+    nAcl->cacheStart = currentaddr - freespace;
+    nAcl->cacheEnd = currentaddr;
+    freespace = 0;
+    if (nAcl->cacheStart < nAcl->cacheEnd) {
+        BoxRec AvailFBArea;
+        int lines = nAcl->cacheEnd /
+            (pScrn->displayWidth * (pScrn->bitsPerPixel >> 3));
+        if (!nPtr->noAccel && nPtr->NeoMMIOBase && lines > 1024) 
+            lines = 1024;
+        AvailFBArea.x1 = 0;
+        AvailFBArea.y1 = 0;
+        AvailFBArea.x2 = pScrn->displayWidth;
+        AvailFBArea.y2 = lines;
+        xf86InitFBManager(pScreen, &AvailFBArea); 
+        
+        xf86DrvMsg(pScrn->scrnIndex, X_INFO, 
+                   "Using %i scanlines of offscreen memory \n",
+                   lines - pScrn->virtualY);
+    }
+
+    /* Setup the acceleration primitives */
+    if (!nPtr->noAccel && nPtr->NeoMMIOBase) {
+        Bool ret = FALSE;
+        if (nAcl->cacheStart >= nAcl->cacheEnd) {
+            xf86DrvMsg(scrnIndex, X_ERROR,
+                       "Too little space for pixmap cache.\n");
+        } 	    
+        switch(nPtr->NeoChipset) {
+        case NM2070 :
+            ret = Neo2070AccelInit(pScreen);
+            break;
+        case NM2090 :
+        case NM2093 :
+            ret = Neo2090AccelInit(pScreen);
+            break;
+        case NM2097 :
+        case NM2160 :
+            ret = Neo2097AccelInit(pScreen);
+            break;
+        case NM2200 :
+        case NM2230 :
+        case NM2360 :
+        case NM2380 :
+            ret = Neo2200AccelInit(pScreen);
+            break;
+        }
+        xf86DrvMsg(pScrn->scrnIndex,X_INFO,
+                   "Acceleration %s Initialized\n",ret ? "" : "not");
+    } 
+
     miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
@@ -1745,10 +1696,8 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
 	xf86DPMSInit(pScreen, (DPMSSetProcPtr)NeoDisplayPowerManagementSet,
 		     0);
 
-    if (!nPtr->noLinear) {
-	pScrn->memPhysBase = (unsigned long)nPtr->NeoLinearAddr;
-	pScrn->fbOffset = 0;
-    }
+    pScrn->memPhysBase = (unsigned long)nPtr->NeoLinearAddr;
+    pScrn->fbOffset = 0;
     
     /* Wrap the current CloseScreen function */
     nPtr->CloseScreen = pScreen->CloseScreen;
@@ -1975,85 +1924,80 @@ neoMapMem(ScrnInfoPtr pScrn)
     NEOPtr nPtr = NEOPTR(pScrn);
     vgaHWPtr hwp = VGAHWPTR(pScrn);
 
-    if (!nPtr->noLinear) {
-	if (!nPtr->noMMIO) {
-	    if (nPtr->pEnt->location.type == BUS_PCI){
+    if (!nPtr->noMMIO) {
+        if (nPtr->pEnt->location.type == BUS_PCI){
 
 #ifndef XSERVER_LIBPCIACCESS
-		nPtr->NeoMMIOBase =
-		    xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
-				  nPtr->PciTag, nPtr->NeoMMIOAddr,
-				  0x200000L);
-		if (nPtr->NeoMMIOAddr2 != 0){
-		    nPtr->NeoMMIOBase2 =
-		        xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
-				      nPtr->PciTag, nPtr->NeoMMIOAddr2,
-				      0x100000L);
-		}
+            nPtr->NeoMMIOBase =
+                xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
+                              nPtr->PciTag, nPtr->NeoMMIOAddr,
+                              0x200000L);
+            if (nPtr->NeoMMIOAddr2 != 0){
+                nPtr->NeoMMIOBase2 =
+                    xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
+                                  nPtr->PciTag, nPtr->NeoMMIOAddr2,
+                                  0x100000L);
+            }
 
 #else
-		void** result = (void**)&nPtr->NeoMMIOBase;
-		int err = pci_device_map_range(nPtr->PciInfo,
-					       nPtr->NeoMMIOAddr,
-					       0x200000L,
-					       PCI_DEV_MAP_FLAG_WRITABLE,
-					       result);
-		if (err)
-		    return FALSE;
-		
-		if (nPtr->NeoMMIOAddr2 != 0){
-		    result = (void**)&nPtr->NeoMMIOBase2;
-		    err = pci_device_map_range(nPtr->PciInfo,
-						   nPtr->NeoMMIOAddr2,
-						   0x100000L,
-						   PCI_DEV_MAP_FLAG_WRITABLE,
-						   result);
+            void** result = (void**)&nPtr->NeoMMIOBase;
+            int err = pci_device_map_range(nPtr->PciInfo,
+                                           nPtr->NeoMMIOAddr,
+                                           0x200000L,
+                                           PCI_DEV_MAP_FLAG_WRITABLE,
+                                           result);
+            if (err)
+                return FALSE;
+            
+            if (nPtr->NeoMMIOAddr2 != 0){
+                result = (void**)&nPtr->NeoMMIOBase2;
+                err = pci_device_map_range(nPtr->PciInfo,
+                                               nPtr->NeoMMIOAddr2,
+                                               0x100000L,
+                                               PCI_DEV_MAP_FLAG_WRITABLE,
+                                               result);
 
-		    if (err) 
-			return FALSE;
-		}
+                if (err) 
+                    return FALSE;
+            }
 #endif
-	    } else
-		nPtr->NeoMMIOBase =
-		    xf86MapVidMem(pScrn->scrnIndex,
-				  VIDMEM_MMIO, nPtr->NeoMMIOAddr,
-				  0x200000L);
-	    if (nPtr->NeoMMIOBase == NULL)
-	        return FALSE;
-	}
-
-	if (nPtr->pEnt->location.type == BUS_PCI)
-
-#ifndef XSERVER_LIBPCIACCESS
-	    nPtr->NeoFbBase =
-		xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
-			      nPtr->PciTag,
-			      (unsigned long)nPtr->NeoLinearAddr,
-			      nPtr->NeoFbMapSize);
-#else
-	{
-	    void** result = (void**)&nPtr->NeoFbBase;
-	    int err = pci_device_map_range(nPtr->PciInfo,
-					   nPtr->NeoLinearAddr,
-					   nPtr->NeoFbMapSize,
-					   PCI_DEV_MAP_FLAG_WRITABLE |
-					   PCI_DEV_MAP_FLAG_WRITE_COMBINE,
-					   result);
-	    if (err)
-		return FALSE;
-	}
-#endif
-	else
-	    nPtr->NeoFbBase =
-		xf86MapVidMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
-			      (unsigned long)nPtr->NeoLinearAddr,
-			      nPtr->NeoFbMapSize);
-	if (nPtr->NeoFbBase == NULL)
-	    return FALSE;
-    } else {
-	/* In paged mode Base is the VGA window at 0xA0000 */
-	nPtr->NeoFbBase = hwp->Base;
+        } else
+            nPtr->NeoMMIOBase =
+                xf86MapVidMem(pScrn->scrnIndex,
+                              VIDMEM_MMIO, nPtr->NeoMMIOAddr,
+                              0x200000L);
+        if (nPtr->NeoMMIOBase == NULL)
+            return FALSE;
     }
+
+    if (nPtr->pEnt->location.type == BUS_PCI)
+
+#ifndef XSERVER_LIBPCIACCESS
+        nPtr->NeoFbBase =
+            xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
+                          nPtr->PciTag,
+                          (unsigned long)nPtr->NeoLinearAddr,
+                          nPtr->NeoFbMapSize);
+#else
+    {
+        void** result = (void**)&nPtr->NeoFbBase;
+        int err = pci_device_map_range(nPtr->PciInfo,
+                                       nPtr->NeoLinearAddr,
+                                       nPtr->NeoFbMapSize,
+                                       PCI_DEV_MAP_FLAG_WRITABLE |
+                                       PCI_DEV_MAP_FLAG_WRITE_COMBINE,
+                                       result);
+        if (err)
+            return FALSE;
+    }
+#endif
+    else
+        nPtr->NeoFbBase =
+            xf86MapVidMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
+                          (unsigned long)nPtr->NeoLinearAddr,
+                          nPtr->NeoFbMapSize);
+    if (nPtr->NeoFbBase == NULL)
+        return FALSE;
     return TRUE;
 }
 
@@ -2066,32 +2010,30 @@ neoUnmapMem(ScrnInfoPtr pScrn)
 {
     NEOPtr nPtr = NEOPTR(pScrn);
 
-    if (!nPtr->noLinear) {
 #ifndef XSERVER_LIBPCIACCESS
-      if (nPtr->NeoMMIOBase)
-	  xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase,
-			  0x200000L);
+    if (nPtr->NeoMMIOBase)
+        xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase,
+                        0x200000L);
 #else
-      if (nPtr->NeoMMIOBase)
-	  pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase, 0x200000L);
+    if (nPtr->NeoMMIOBase)
+        pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase, 0x200000L);
 #endif
-      nPtr->NeoMMIOBase = NULL;
+    nPtr->NeoMMIOBase = NULL;
 #ifndef XSERVER_LIBPCIACCESS
-      if (nPtr->NeoMMIOBase2)
-	  xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase2,
-			  0x100000L);
+    if (nPtr->NeoMMIOBase2)
+        xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase2,
+                        0x100000L);
 #else
-      if (nPtr->NeoMMIOBase2)
-	  pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase2, 0x100000L);
+    if (nPtr->NeoMMIOBase2)
+        pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase2, 0x100000L);
 #endif
-      nPtr->NeoMMIOBase2 = NULL;
+    nPtr->NeoMMIOBase2 = NULL;
 #ifndef XSERVER_LIBPCIACCESS
-      xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoFbBase,
-		    nPtr->NeoFbMapSize); 
+    xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoFbBase,
+                    nPtr->NeoFbMapSize); 
 #else
-      pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoFbBase, nPtr->NeoFbMapSize);
+    pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoFbBase, nPtr->NeoFbMapSize);
 #endif
-    }
     nPtr->NeoFbBase = NULL;
     
     return TRUE;
@@ -2705,8 +2647,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
 
     /* If they are used, enable linear addressing and/or enable MMIO. */
     NeoNew->SysIfaceCntl2 = 0x00;
-    if (!nPtr->noLinear)
-	NeoNew->SysIfaceCntl2 |= 0x80;
+    NeoNew->SysIfaceCntl2 |= 0x80;
     if (!nPtr->noMMIO)
 	NeoNew->SysIfaceCntl2 |= 0x40;
 
