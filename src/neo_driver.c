@@ -109,10 +109,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include <X11/Xproto.h>
 #include "scrnintstr.h"
 #include "servermd.h"
-#ifdef XFreeXDGA
-#define _XF86DGA_SERVER_
-#include <X11/extensions/xf86dgastr.h>
-#endif
 
 #include <unistd.h>
 
