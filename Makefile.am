@@ -21,7 +21,7 @@
 SUBDIRS = src man
 MAINTAINERCLEANFILES = ChangeLog INSTALL
 
-EXTRA_DIST = NM-reg.txt TODO
+EXTRA_DIST = NM-reg.txt
 
 .PHONY: ChangeLog INSTALL
 
