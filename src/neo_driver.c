@@ -1454,22 +1454,11 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     miClearVisualTypes();
     
     /* Setup the visuals we support. */
-#if 0
     if (!miSetVisualTypes(pScrn->depth,
       		      miGetDefaultVisualMask(pScrn->depth),
 		      pScrn->rgbBits, pScrn->defaultVisual))
          return FALSE;
-#else
-    if (!miSetVisualTypes(pScrn->depth,
-      		      miGetDefaultVisualMask(pScrn->depth),
-		      pScrn->rgbBits, pScrn->defaultVisual))
-         return FALSE;
-    if (pScrn->depth > 8) {
-	if (!miSetVisualTypes(8, miGetDefaultVisualMask(8), 6,
-			      pScrn->defaultVisual))
-	    return FALSE;
-    }
-#endif
+
     if (!miSetPixmapDepths ()) return FALSE;
 
     /*
@@ -1505,8 +1494,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
         /* Fixup RGB ordering */
         visual = pScreen->visuals + pScreen->numVisuals;
         while (--visual >= pScreen->visuals) {
-	    if ((visual->class | DynamicClass) == DirectColor
-		&& visual->nplanes > 8) {
+	    if ((visual->class | DynamicClass) == DirectColor) {
 		visual->offsetRed = pScrn->offset.red;
 		visual->offsetGreen = pScrn->offset.green;
 		visual->offsetBlue = pScrn->offset.blue;
@@ -2605,7 +2593,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
      */
     NeoStd->Attribute[16] = 0x01;
 
-    switch (pScrn->depth) { /*@!@*/
+    switch (pScrn->depth) {
     case  8 :
 	NeoStd->CRTC[0x13] = pScrn->displayWidth >> 3;
 	NeoNew->ExtCRTOffset   = pScrn->displayWidth >> 11;
