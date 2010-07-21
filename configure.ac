@@ -22,9 +22,9 @@
 
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-neomagic],
-        1.2.5,
+        [1.2.5],
         [https://bugs.freedesktop.org/enter_bug.cgi?product=xorg],
-        xf86-video-neomagic)
+        [xf86-video-neomagic])
 
 AC_CONFIG_SRCDIR([Makefile.am])
 AM_CONFIG_HEADER([config.h])
