@@ -475,7 +475,7 @@ NEOFreeRec(ScrnInfoPtr pScrn)
 {
     if (pScrn->driverPrivate == NULL)
 	return;
-    xfree(pScrn->driverPrivate);
+    free(pScrn->driverPrivate);
     pScrn->driverPrivate = NULL;
 }
 
@@ -551,7 +551,7 @@ NEOProbe(DriverPtr drv, int flags)
 		    foundScreen = TRUE;
 		}
 	    }
-	    xfree(usedChips);
+	    free(usedChips);
 	}
     }
 
@@ -584,11 +584,11 @@ NEOProbe(DriverPtr drv, int flags)
 	    foundScreen = TRUE;
 	}
       }
-      xfree(usedChips);
+      free(usedChips);
     }
 #endif
 
-    xfree(devSections);
+    free(devSections);
     return foundScreen;
 }
 
@@ -940,11 +940,11 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     xf86CollectOptions(pScrn, NULL);
     /* Process the options */
     if (nPtr->NeoChipset == NM2070) {
-	if (!(nPtr->Options = xalloc(sizeof(NEO_2070_Options))))
+	if (!(nPtr->Options = malloc(sizeof(NEO_2070_Options))))
 	    return FALSE;
 	memcpy(nPtr->Options, NEO_2070_Options, sizeof(NEO_2070_Options));
     } else {
-	if (!(nPtr->Options = xalloc(sizeof(NEOOptions))))
+	if (!(nPtr->Options = malloc(sizeof(NEOOptions))))
 	    return FALSE;
 	memcpy(nPtr->Options, NEOOptions, sizeof(NEOOptions));
     }
@@ -1476,7 +1476,7 @@ NEOScreenInit(int scrnIndex, ScreenPtr pScreen, int argc, char **argv)
     
     if(nPtr->shadowFB) {
 	nPtr->ShadowPitch = BitmapBytePad(pScrn->bitsPerPixel * width);
-	nPtr->ShadowPtr = xalloc(nPtr->ShadowPitch * height);
+	nPtr->ShadowPtr = malloc(nPtr->ShadowPitch * height);
 	displayWidth = nPtr->ShadowPitch / (pScrn->bitsPerPixel >> 3);
 	FBStart = nPtr->ShadowPtr;
     } else {
@@ -1789,7 +1789,7 @@ NEOCloseScreen(int scrnIndex, ScreenPtr pScreen)
     if (nPtr->CursorInfo)
 	xf86DestroyCursorInfoRec(nPtr->CursorInfo);
     if (nPtr->ShadowPtr)
-	xfree(nPtr->ShadowPtr);
+	free(nPtr->ShadowPtr);
 
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = nPtr->CloseScreen;
@@ -2860,7 +2860,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     if (NeoNew->reg) {
 	xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Non-NULL reg in NeoInit: reg=%p\n", (void *)NeoNew->reg);
-	xfree(NeoNew->reg);
+	free(NeoNew->reg);
 	NeoNew->reg = NULL;
     }
 
