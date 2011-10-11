@@ -107,6 +107,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "scrnintstr.h"
 #include "servermd.h"
 
+#include <stdlib.h>
 #include <unistd.h>
 
 /* Mandatory functions */
