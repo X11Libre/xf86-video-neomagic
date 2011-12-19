@@ -660,6 +660,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     if (!vgaHWGetHWRec(pScrn))
 	return FALSE;
     hwp = VGAHWPTR(pScrn);
+    vgaHWSetStdFuncs(hwp);
 
     /* Allocate the NeoRec driverPrivate */
     if (!NEOGetRec(pScrn)) {
