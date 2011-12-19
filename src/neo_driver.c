@@ -1089,6 +1089,18 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     if (nPtr->showcache)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG,
 		   "Show chache for debugging\n");
+
+    if (!xf86LoadSubModule(pScrn, "xaa")) {
+	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Falling back to shadow\n");
+	nPtr->shadowFB = 1;
+    }
+
+    if (nPtr->shadowFB) {
+	if (!xf86LoadSubModule(pScrn, "shadow")) {
+	    RETURN;
+	}
+    }
+
     if (nPtr->shadowFB) {
         nPtr->noAccel = TRUE;
         xf86DrvMsg(pScrn->scrnIndex, X_CONFIG, 
@@ -1314,15 +1326,6 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	RETURN;
     }
 
-    if (!xf86LoadSubModule(pScrn, "xaa")) 
-        RETURN;
-
-    if (nPtr->shadowFB) {
-	if (!xf86LoadSubModule(pScrn, "shadow")) {
-	    RETURN;
-	}
-    }
-    
     if (!nPtr->swCursor) {
 	if (!xf86LoadSubModule(pScrn, "ramdac"))
 	    RETURN;
