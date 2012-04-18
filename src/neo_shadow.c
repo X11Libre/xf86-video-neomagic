@@ -19,7 +19,7 @@
 void
 neoShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf)
 {
-    RegionPtr damage = &pBuf->damage;
+    RegionPtr damage = DamageRegion(pBuf->pDamage);
     ScrnInfoPtr pScrn;
     pScrn = xf86Screens[pScreen->myNum];
     
