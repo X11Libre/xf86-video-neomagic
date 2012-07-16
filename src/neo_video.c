@@ -38,8 +38,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #define MAKE_ATOM(a)	MakeAtom(a, sizeof(a) - 1, TRUE)
 
 #include "dixstruct.h"
-#include "xaa.h"
-#include "xaalocal.h"
 
 static XF86VideoAdaptorPtr NEOSetupVideo(ScreenPtr);
 

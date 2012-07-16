@@ -46,8 +46,11 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
+#ifdef HAVE_XAA_H
 #include "xaa.h"
 #include "xaalocal.h"		/* XAA internals as we replace some of XAA */
+#endif
+#include "xf86fbman.h"
 #include "xf86Cursor.h"
 
 #include "shadowfb.h"
@@ -202,7 +205,9 @@ typedef struct neoRec
     PCITAG      PciTag;
 #endif
     EntityInfoPtr pEnt;
+#ifdef HAVE_XAA_H
     XAAInfoRecPtr	AccelInfoRec;
+#endif
     NEOACLRec Accel;
     unsigned long NeoMMIOAddr;
     unsigned long NeoLinearAddr;

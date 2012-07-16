@@ -1788,8 +1788,10 @@ NEOCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 	neoLock(pScrn);
 	neoUnmapMem(pScrn);
     }
+#ifdef HAVE_XAA_H
     if (nPtr->AccelInfoRec)
 	XAADestroyInfoRec(nPtr->AccelInfoRec);
+#endif
     if (nPtr->CursorInfo)
 	xf86DestroyCursorInfoRec(nPtr->CursorInfo);
     if (nPtr->ShadowPtr)
