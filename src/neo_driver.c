@@ -69,9 +69,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* All drivers initialising the SW cursor need this */
 #include "mipointer.h"
 
-/* All drivers implementing backing store need this */
-#include "mibstore.h"
-
 /* All drivers using the mi colormap manipulation need this */
 #include "micmap.h"
 
@@ -1618,7 +1615,6 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
                    "Acceleration %s Initialized\n",ret ? "" : "not");
     } 
 
-    miInitializeBackingStore(pScreen);
     xf86SetBackingStore(pScreen);
     xf86SetSilkenMouse(pScreen);
 
