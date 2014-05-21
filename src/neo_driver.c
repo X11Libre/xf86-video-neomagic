@@ -1439,6 +1439,12 @@ NEOShadowInit(ScreenPtr pScreen)
 	return TRUE;
 }
 
+static Bool
+NEOSaveScreen(ScreenPtr pScreen, int mode)
+{
+    return vgaHWSaveScreen(pScreen, mode);
+}
+
 /* Mandatory */
 static Bool
 NEOScreenInit(SCREEN_INIT_ARGS_DECL)
@@ -1712,7 +1718,7 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
 
     NEOInitVideo(pScreen);
 
-    pScreen->SaveScreen = vgaHWSaveScreenWeak();
+    pScreen->SaveScreen = NEOSaveScreen;
 
     /* Setup DPMS mode */
     if (nPtr->NeoChipset != NM2070)
@@ -3049,6 +3055,12 @@ neo_ddc1Read(ScrnInfoPtr pScrn)
     return (tmp);
 }
 
+static void
+neo_ddc1SetSpeed(ScrnInfoPtr pScrn, xf86ddcSpeed speed)
+{
+    vgaHWddc1SetSpeed(pScrn, speed);
+}
+
 static xf86MonPtr
 neo_ddc1(ScrnInfoPtr pScrn)
 {
@@ -3063,7 +3075,7 @@ neo_ddc1(ScrnInfoPtr pScrn)
     VGAwCR(0x21,0x00);
     VGAwCR(0x1D,0x01);  /* some Voodoo */ 
     VGAwGR(0xA1,0x2F);
-    ret =  xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn),vgaHWddc1SetSpeedWeak(),neo_ddc1Read);
+    ret =  xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn),neo_ddc1SetSpeed,neo_ddc1Read);
     /* undo initialization */
     VGAwCR(0x21,reg1);
     VGAwCR(0x1D,reg2);
