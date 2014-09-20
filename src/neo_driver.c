@@ -1994,10 +1994,12 @@ neoMapMem(ScrnInfoPtr pScrn)
             }
 #endif
         } else
+#ifdef VIDMEM_MMIO
             nPtr->NeoMMIOBase =
                 xf86MapVidMem(pScrn->scrnIndex,
                               VIDMEM_MMIO, nPtr->NeoMMIOAddr,
                               0x200000L);
+#endif
         if (nPtr->NeoMMIOBase == NULL)
             return FALSE;
     }
@@ -2024,10 +2026,12 @@ neoMapMem(ScrnInfoPtr pScrn)
     }
 #endif
     else
+#ifdef VIDMEM_FRAMEBUFFER
         nPtr->NeoFbBase =
             xf86MapVidMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
                           (unsigned long)nPtr->NeoLinearAddr,
                           nPtr->NeoFbMapSize);
+#endif
     if (nPtr->NeoFbBase == NULL)
         return FALSE;
     return TRUE;
