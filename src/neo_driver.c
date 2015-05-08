@@ -636,7 +636,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     int apertureSize;
     Bool height_480 = FALSE;
     Bool lcdCenterOptSet = FALSE;
-    char *s;
+    const char *s;
     
     if (flags & PROBE_DETECT)  {
 	neoProbeDDC( pScrn, xf86GetEntityInfo(pScrn->entityList[0])->index );
