@@ -118,7 +118,9 @@ static ModeStatus NEOValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
                                Bool verbose, int flags);
 
 /* Internally used functions */
+#ifdef HAVE_ISA
 static int      neoFindIsaDevice(GDevPtr dev);
+#endif
 static Bool     neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void     neoSave(ScrnInfoPtr pScrn);
 static void     neoRestore(ScrnInfoPtr pScrn, vgaRegPtr VgaReg,
