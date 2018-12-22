@@ -1954,7 +1954,6 @@ static Bool
 neoMapMem(ScrnInfoPtr pScrn)
 {
     NEOPtr nPtr = NEOPTR(pScrn);
-    vgaHWPtr hwp = VGAHWPTR(pScrn);
 
     if (!nPtr->noMMIO) {
         if (nPtr->pEnt->location.type == BUS_PCI){
