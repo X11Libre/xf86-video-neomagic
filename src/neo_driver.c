@@ -1074,7 +1074,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG,
 		   "Video modes are centered on the display\n");
     if (nPtr->swCursor)
-	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG, "using sofware cursor\n");
+	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG, "using software cursor\n");
     if (nPtr->noMMIO)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG, "MMIO mode disabled\n");
     if (nPtr->onPciBurst)
@@ -1084,7 +1084,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 		   "Option StrangeLockups set: disabling some acceleration\n");
     if (nPtr->showcache)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG,
-		   "Show chache for debugging\n");
+		   "Show cache for debugging\n");
 
     if (!xf86LoadSubModule(pScrn, "xaa")) {
 	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Falling back to shadow\n");
@@ -2787,7 +2787,7 @@ neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode)
     }
         
     /*
-     * If the screen is to be centerd, turn on the centering for the
+     * If the screen is to be centered, turn on the centering for the
      * various modes.
      */
     NeoNew->PanelVertCenterReg1  = 0x00;
