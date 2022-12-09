@@ -463,6 +463,7 @@ NEOGetRec(ScrnInfoPtr pScrn)
 
     if (pScrn->driverPrivate == NULL)
 	return FALSE;
+    else
         return TRUE;
 }
 
