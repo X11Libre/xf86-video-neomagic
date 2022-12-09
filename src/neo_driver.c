@@ -891,6 +891,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	case 24:
 	    if (nPtr->NeoChipset != NM2070)
 		break;
+	    /* FALLTHROUGH */
 	default:
 	    xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
 		       "Given depth (%d) is not supported by this driver\n",
