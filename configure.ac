@@ -23,8 +23,8 @@
 # Initialize Autoconf
 AC_PREREQ([2.60])
 AC_INIT([xf86-video-neomagic],
-        [1.3.0],
-        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-neomagic/issues],
+        [1.3.1],
+        [https://gitlab.freedesktop.org/xorg/driver/xf86-video-neomagic/-/issues],
         [xf86-video-neomagic])
 AC_CONFIG_SRCDIR([Makefile.am])
 AC_CONFIG_HEADERS([config.h])
