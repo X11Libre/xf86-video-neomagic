@@ -1457,7 +1457,6 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
     vgaHWPtr hwp;
     NEOPtr nPtr;
     NEOACLPtr nAcl;
-    int ret;
     VisualPtr visual;
     int allocatebase, freespace, currentaddr;
 #ifndef XSERVER_LIBPCIACCESS
@@ -1530,12 +1529,14 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
 	FBStart = nPtr->NeoFbBase;
     }
 
-    ret = fbScreenInit(pScreen, FBStart,
-			    width, height,
-			    pScrn->xDpi, pScrn->yDpi,
-			    displayWidth, pScrn->bitsPerPixel);
-    if (!ret)
-	return FALSE;
+    {
+        int ret = fbScreenInit(pScreen, FBStart,
+                               width, height,
+                               pScrn->xDpi, pScrn->yDpi,
+                               displayWidth, pScrn->bitsPerPixel);
+        if (!ret)
+            return FALSE;
+    }
     if (pScrn->depth > 8) {
         /* Fixup RGB ordering */
         visual = pScreen->visuals + pScreen->numVisuals;
