@@ -167,7 +167,7 @@ Neo2097AccelInit(ScreenPtr pScreen)
 	 * transfer up to 3 bytes more than it wants.
 	 */
 	infoPtr->ScanlineColorExpandBuffers =
-	    (unsigned char **)xnfalloc(sizeof(char*));
+	    (unsigned char **)XNFalloc(sizeof(char*));
 	infoPtr->ScanlineColorExpandBuffers[0] = (unsigned char *)(nPtr->NeoMMIOBase + 0x100000);
 	infoPtr->NumScanlineColorExpandBuffers = 1;
 	infoPtr->ScanlineCPUToScreenColorExpandFillFlags = ( NO_PLANEMASK |

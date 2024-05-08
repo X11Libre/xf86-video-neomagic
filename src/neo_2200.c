@@ -176,7 +176,7 @@ Neo2200AccelInit(ScreenPtr pScreen)
 						CPU_TRANSFER_PAD_DWORD |
 						BIT_ORDER_IN_BYTE_MSBFIRST );
 	infoPtr->ScanlineColorExpandBuffers =
-	    (unsigned char **)xnfalloc(sizeof(char*));
+	    (unsigned char **)XNFalloc(sizeof(char*));
 	infoPtr->ScanlineColorExpandBuffers[0] =
 	    (unsigned char *)(nPtr->NeoMMIOBase + 0x100000);
 	infoPtr->NumScanlineColorExpandBuffers = 1;

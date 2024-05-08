@@ -143,7 +143,7 @@ Neo2090AccelInit(ScreenPtr pScreen)
 
 	/* cpu to screen color expansion */
 	infoPtr->ScanlineColorExpandBuffers =
-	    (unsigned char **)xnfalloc(sizeof(char*));
+	    (unsigned char **)XNFalloc(sizeof(char*));
 	infoPtr->ScanlineColorExpandBuffers[0] = 
 	    (unsigned char *)(nPtr->NeoMMIOBase + 0x100000);
 	infoPtr->NumScanlineColorExpandBuffers = 1;
