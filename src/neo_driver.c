@@ -459,7 +459,7 @@ NEOGetRec(ScrnInfoPtr pScrn)
     if (pScrn->driverPrivate != NULL)
 	return TRUE;
 
-    pScrn->driverPrivate = xnfcalloc(sizeof(NEORec), 1);
+    pScrn->driverPrivate = XNFcallocarray(sizeof(NEORec), 1);
 
     if (pScrn->driverPrivate == NULL)
 	return FALSE;
@@ -1227,7 +1227,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
      * Setup the ClockRanges, which describe what clock ranges are available,
      * and what sort of modes they can be used for.
      */
-    clockRanges = (ClockRangePtr)xnfcalloc(sizeof(ClockRange), 1);
+    clockRanges = (ClockRangePtr)XNFcallocarray(sizeof(ClockRange), 1);
     clockRanges->next = NULL;
     clockRanges->ClockMulFactor = 1;
     clockRanges->minClock = 11000;   /* guessed §§§ */
@@ -2144,7 +2144,7 @@ neoSave(ScrnInfoPtr pScrn)
     save->ProgramVCLK = TRUE;
     
     if (save->reg == NULL)
-        save->reg = (regSavePtr)xnfcalloc(sizeof(regSaveRec), 1);
+        save->reg = (regSavePtr)XNFcallocarray(sizeof(regSaveRec), 1);
     else
         xf86DrvMsg(pScrn->scrnIndex, X_WARNING,
 		   "Non-NULL reg in NeoSave: reg=%p\n", (void *)save->reg);

@@ -256,7 +256,7 @@ neoRealizeCursor(xf86CursorInfoPtr infoPtr, CursorPtr pCurs)
     unsigned char *mem;
     int SrcPitch, DstPitch, y, x, z;
 
-    mem = (unsigned char*)xnfcalloc(4096,1);
+    mem = (unsigned char*)XNFcallocarray(4096,1);
     SrcPitch = (pCurs->bits->width + 31) >> 5;
     DstPitch = infoPtr->MaxWidth >> 4;
     SrcS = (CARD32*)pCurs->bits->source;
