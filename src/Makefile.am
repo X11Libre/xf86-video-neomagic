@@ -29,10 +29,6 @@ neomagic_drv_la_LDFLAGS = -module -avoid-version
 neomagic_drv_ladir = @moduledir@/drivers
 
 neomagic_drv_la_SOURCES = \
-         neo_2070.c \
-         neo_2090.c \
-         neo_2097.c \
-         neo_2200.c \
          neo_cursor.c \
          neo_dga.c \
          neo_driver.c \

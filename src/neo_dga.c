@@ -39,15 +39,6 @@ static Bool NEO_OpenFramebuffer(ScrnInfoPtr, char **, unsigned char **,
 static Bool NEO_SetMode(ScrnInfoPtr, DGAModePtr);
 static int  NEO_GetViewport(ScrnInfoPtr);
 static void NEO_SetViewport(ScrnInfoPtr, int, int, int);
-#ifdef HAVE_XAA_H
-static void NEO_Sync(ScrnInfoPtr);
-static void NEO_FillRect(ScrnInfoPtr, int, int, int, int, unsigned long);
-static void NEO_BlitRect(ScrnInfoPtr, int, int, int, int, int, int);
-#if 0
-static void NEO_BlitTransRect(ScrnInfoPtr, int, int, int, int, int, int, 
-					unsigned long);
-#endif
-#endif
 
 static
 DGAFunctionRec NEODGAFuncs = {
@@ -56,18 +47,7 @@ DGAFunctionRec NEODGAFuncs = {
    NEO_SetMode,
    NEO_SetViewport,
    NEO_GetViewport,
-#ifdef HAVE_XAA_H
-   NEO_Sync,
-   NEO_FillRect,
-   NEO_BlitRect,
-#if 0
-   NEO_BlitTransRect
-#else
-   NULL
-#endif
-#else
    NULL, NULL, NULL
-#endif
 };
 
 Bool
@@ -102,10 +82,6 @@ NEODGAInit(ScreenPtr pScreen)
 
 	currentMode->mode = pMode;
 	currentMode->flags = DGA_CONCURRENT_ACCESS | DGA_PIXMAP_AVAILABLE;
-#ifdef HAVE_XAA_H
-	if (!pNEO->noAccel)
-	    currentMode->flags |= (DGA_FILL_RECT | DGA_BLIT_RECT);
-#endif
 	if(pMode->Flags & V_DBLSCAN)
 	   currentMode->flags |= DGA_DOUBLESCAN;
 	if(pMode->Flags & V_INTERLACE)
@@ -202,67 +178,6 @@ NEO_SetViewport(
    pNEO->DGAViewportStatus = 0;  
 }
 
-#ifdef HAVE_XAA_H
-static void 
-NEO_FillRect (
-   ScrnInfoPtr pScrn, 
-   int x, int y, int w, int h, 
-   unsigned long color
-){
-    NEOPtr pNEO = NEOPTR(pScrn);
-
-    if(pNEO->AccelInfoRec) {
-	(*pNEO->AccelInfoRec->SetupForSolidFill)(pScrn, color, GXcopy, ~0);
-	(*pNEO->AccelInfoRec->SubsequentSolidFillRect)(pScrn, x, y, w, h);
-	SET_SYNC_FLAG(pNEO->AccelInfoRec);
-    }
-}
-
-static void 
-NEO_Sync(
-   ScrnInfoPtr pScrn
-){
-    NEOPtr pNEO = NEOPTR(pScrn);
-    if(pNEO->AccelInfoRec) {
-	(*pNEO->AccelInfoRec->Sync)(pScrn);
-    }
-}
-
-static void 
-NEO_BlitRect(
-   ScrnInfoPtr pScrn, 
-   int srcx, int srcy, 
-   int w, int h, 
-   int dstx, int dsty
-){
-    NEOPtr pNEO = NEOPTR(pScrn);
-
-    if(pNEO->AccelInfoRec) {
-	int xdir = ((srcx < dstx) && (srcy == dsty)) ? -1 : 1;
-	int ydir = (srcy < dsty) ? -1 : 1;
-
-	(*pNEO->AccelInfoRec->SetupForScreenToScreenCopy)(
-		pScrn, xdir, ydir, GXcopy, ~0, -1);
-	(*pNEO->AccelInfoRec->SubsequentScreenToScreenCopy)(
-		pScrn, srcx, srcy, dstx, dsty, w, h);
-	SET_SYNC_FLAG(pNEO->AccelInfoRec);
-    }
-}
-
-#if 0
-static void 
-NEO_BlitTransRect(
-   ScrnInfoPtr pScrn, 
-   int srcx, int srcy, 
-   int w, int h, 
-   int dstx, int dsty,
-   unsigned long color
-){
-  /* this one should be separate since the XAA function would
-     prohibit usage of ~0 as the key */
-}
-#endif
-#endif
 static Bool 
 NEO_OpenFramebuffer(
    ScrnInfoPtr pScrn, 

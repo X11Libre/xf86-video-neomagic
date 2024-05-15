@@ -46,10 +46,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-#ifdef HAVE_XAA_H
-#include "xaa.h"
-#include "xaalocal.h"		/* XAA internals as we replace some of XAA */
-#endif
 #include "xf86fbman.h"
 #include "xf86Cursor.h"
 
@@ -92,18 +88,6 @@ typedef enum {
 
 extern Bool NEOSwitchMode(SWITCH_MODE_ARGS_DECL);
 extern void NEOAdjustFrame(ADJUST_FRAME_ARGS_DECL);
-
-/* in neo_2070.c */
-extern Bool Neo2070AccelInit(ScreenPtr pScreen);
-
-/* in neo_2090.c */
-extern Bool Neo2090AccelInit(ScreenPtr pScreen);
-
-/* in neo_2097.c */
-extern Bool Neo2097AccelInit(ScreenPtr pScreen);
-
-/* in neo_2200.c */
-extern Bool Neo2200AccelInit(ScreenPtr pScreen);
 
 /* in neo_cursor.c */
 extern Bool NeoCursorInit(ScreenPtr pScrn);
@@ -205,9 +189,6 @@ typedef struct neoRec
     PCITAG      PciTag;
 #endif
     EntityInfoPtr pEnt;
-#ifdef HAVE_XAA_H
-    XAAInfoRecPtr	AccelInfoRec;
-#endif
     NEOACLRec Accel;
     unsigned long NeoMMIOAddr;
     unsigned long NeoLinearAddr;

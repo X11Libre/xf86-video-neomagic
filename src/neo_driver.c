@@ -54,12 +54,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /* Everything using inb/outb, etc needs "compiler.h" */
 #include "compiler.h"
 
-#if GET_ABI_MAJOR(ABI_VIDEODRV_VERSION) < 6
-#include "xf86Resources.h"
-/* Needed by Resources Access Control (RAC) */
-#include "xf86RAC.h"
-#endif
-
 /* Drivers that need to access the PCI config space directly need this */
 #include "xf86Pci.h"
 
@@ -118,9 +112,6 @@ static ModeStatus NEOValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
                                Bool verbose, int flags);
 
 /* Internally used functions */
-#ifdef HAVE_ISA
-static int      neoFindIsaDevice(GDevPtr dev);
-#endif
 static Bool     neoModeInit(ScrnInfoPtr pScrn, DisplayModePtr mode);
 static void     neoSave(ScrnInfoPtr pScrn);
 static void     neoRestore(ScrnInfoPtr pScrn, vgaRegPtr VgaReg,
@@ -313,18 +304,6 @@ static PciChipsets NEOPCIchipsets[] = {
     { NM2380,  PCI_CHIP_NM2380,  RES_SHARED_VGA },
     { -1,	     -1,	     RES_UNDEFINED}
 };
-
-#ifdef HAVE_ISA
-static IsaChipsets NEOISAchipsets[] = {
-    { NM2070,               RES_EXCLUSIVE_VGA },
-    { NM2090,               RES_EXCLUSIVE_VGA },
-    { NM2093,               RES_EXCLUSIVE_VGA },
-    { NM2097,               RES_EXCLUSIVE_VGA },
-    { NM2160,               RES_EXCLUSIVE_VGA },
-    { NM2200,               RES_EXCLUSIVE_VGA },
-    { -1,			RES_UNDEFINED }
-};
-#endif
 
 /* The options supported by the Neomagic Driver */
 typedef enum {
@@ -552,71 +531,9 @@ NEOProbe(DriverPtr drv, int flags)
 	}
     }
 
-#ifdef HAVE_ISA 
-    /* Isa Bus */
-
-    numUsed = xf86MatchIsaInstances(NEO_NAME,NEOChipsets,NEOISAchipsets,
-				     drv,neoFindIsaDevice,devSections,
-				     numDevSections,&usedChips);
-    if (numUsed > 0) {
-      if (flags & PROBE_DETECT)
-	foundScreen = TRUE;
-      else for (i = 0; i < numUsed; i++) {
-	ScrnInfoPtr pScrn = NULL;
-	if ((pScrn = xf86ConfigIsaEntity(pScrn, 0, usedChips[i],
-					 NEOISAchipsets, NULL, NULL,
-					 NULL, NULL, NULL))) {
-	    pScrn->driverVersion = NEO_VERSION;
-	    pScrn->driverName    = NEO_DRIVER_NAME;
-	    pScrn->name          = NEO_NAME;
-	    pScrn->Probe         = NEOProbe;
-	    pScrn->PreInit       = NEOPreInit;
-	    pScrn->ScreenInit    = NEOScreenInit;
-	    pScrn->SwitchMode    = NEOSwitchMode;
-	    pScrn->AdjustFrame   = NEOAdjustFrame;
-	    pScrn->EnterVT       = NEOEnterVT;
-	    pScrn->LeaveVT       = NEOLeaveVT;
-	    pScrn->FreeScreen    = NEOFreeScreen;
-	    pScrn->ValidMode     = NEOValidMode;
-	    foundScreen = TRUE;
-	}
-      }
-      free(usedChips);
-    }
-#endif
-
     free(devSections);
     return foundScreen;
 }
-
-#ifdef HAVE_ISA
-static int
-neoFindIsaDevice(GDevPtr dev)
-{
-    unsigned int vgaIOBase;
-    unsigned char id;
-    
-    vgaIOBase = (inb(0x3CC) & 0x01) ? 0x3D0 : 0x3B0;
-    /* §§§ Too intrusive ? */
-    outw(GRAX, 0x2609); /* Unlock NeoMagic registers */
-
-    outb(vgaIOBase + 4, 0x1A);
-    id = inb(vgaIOBase + 5);
-
-    outw(GRAX, 0x0009); /* Lock NeoMagic registers */
-
-    switch (id) {
-    case PROBED_NM2070 :
-	return NM2070;
-    case PROBED_NM2090 :
-	return NM2090;
-    case PROBED_NM2093 :
-	return NM2093;
-    default :
-	return -1;
-    }
-}
-#endif
 
 /* Mandatory */
 Bool
@@ -685,7 +602,7 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	nPtr->NeoChipset = nPtr->pEnt->chipset;
 	pScrn->chipset = (char *)xf86TokenToString(NEOChipsets,
 						   nPtr->pEnt->chipset);
-	/* This driver can handle ISA and PCI buses */
+	/* This driver can handle PCI buses */
 	if (nPtr->pEnt->location.type == BUS_PCI) {
 	    nPtr->PciInfo = xf86GetPciInfoForEntity(nPtr->pEnt->index);
 #ifndef XSERVER_LIBPCIACCESS
@@ -1088,10 +1005,8 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 	xf86DrvMsg(pScrn->scrnIndex,X_CONFIG,
 		   "Show cache for debugging\n");
 
-    if (!xf86LoadSubModule(pScrn, "xaa")) {
-	xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Falling back to shadow\n");
-	nPtr->shadowFB = 1;
-    }
+    xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Falling back to shadow\n");
+    nPtr->shadowFB = 1;
 
     if (nPtr->shadowFB) {
 	if (!xf86LoadSubModule(pScrn, "shadow")) {
@@ -1172,34 +1087,6 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 #endif
 	    
     } 
-#ifndef XSERVER_LIBPCIACCESS
-    else if (nPtr->pEnt->location.type == BUS_ISA) {
-	unsigned int addr;
-	resRange linearRes[] = { {ResExcMemBlock|ResBios|ResBus,0,0},_END };
-	
-	if (!nPtr->NeoLinearAddr) {
-	    VGAwGR(0x09,0x26);
-	    addr = VGArGR(0x13);
-	    VGAwGR(0x09,0x00);
-	    nPtr->NeoLinearAddr = addr << 20;
-	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-		       "FB base address is set at 0x%lX.\n",
-		       nPtr->NeoLinearAddr);
-	}
-	if (!nPtr->NeoMMIOAddr && !nPtr->noMMIO) {
-	    nPtr->NeoMMIOAddr = nPtr->NeoLinearAddr + 0x100000;
-	    xf86DrvMsg(pScrn->scrnIndex, X_PROBED,
-		       "MMIO base address is set at 0x%lX.\n",
-		       nPtr->NeoMMIOAddr);
-	}
-
-	linearRes[0].rBegin = nPtr->NeoLinearAddr;
-	linearRes[1].rEnd = nPtr->NeoLinearAddr + nPtr->NeoFbMapSize - 1;
-	if (xf86RegisterResources(nPtr->pEnt->index,linearRes,ResNone)) {
-	    RETURN;
-	}
-    }
-#endif
     else
 	RETURN;
 
@@ -1641,27 +1528,9 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                        "Too little space for pixmap cache.\n");
         } 	    
-        switch(nPtr->NeoChipset) {
-        case NM2070 :
-            ret = Neo2070AccelInit(pScreen);
-            break;
-        case NM2090 :
-        case NM2093 :
-            ret = Neo2090AccelInit(pScreen);
-            break;
-        case NM2097 :
-        case NM2160 :
-            ret = Neo2097AccelInit(pScreen);
-            break;
-        case NM2200 :
-        case NM2230 :
-        case NM2360 :
-        case NM2380 :
-            ret = Neo2200AccelInit(pScreen);
-            break;
-        }
+
         xf86DrvMsg(pScrn->scrnIndex,X_INFO,
-                   "Acceleration %s Initialized\n",ret ? "" : "not");
+                   "Acceleration not available\n");
     } 
 
     xf86SetBackingStore(pScreen);
@@ -1830,10 +1699,6 @@ NEOCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 	neoLock(pScrn);
 	neoUnmapMem(pScrn);
     }
-#ifdef HAVE_XAA_H
-    if (nPtr->AccelInfoRec)
-	XAADestroyInfoRec(nPtr->AccelInfoRec);
-#endif
     if (nPtr->CursorInfo)
 	xf86DestroyCursorInfoRec(nPtr->CursorInfo);
     if (nPtr->ShadowPtr)
