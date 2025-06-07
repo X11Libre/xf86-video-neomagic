@@ -1,8 +1,8 @@
 .\" shorthand for double quote that works everywhere.
 .ds q \N'34'
-.TH NEOMAGIC __drivermansuffix__ __vendorversion__
+.TH NEOMAGIC __drivermansuffix__ 2009-01-09 __vendorversion__
 .SH NAME
-neomagic \- Neomagic video driver
+neomagic - Neomagic video driver for Xorg
 .SH SYNOPSIS
 .nf
 .B "Section \*qDevice\*q"
@@ -12,72 +12,79 @@ neomagic \- Neomagic video driver
 .B EndSection
 .fi
 .SH DESCRIPTION
-.B neomagic 
-is an __xservername__ driver for the Neomagic graphics chipsets found in many
-laptop computers.  
+.B neomagic
+is an Xorg driver for the Neomagic graphics chipsets found in many
+laptop computers from the 1990s.
 .SH SUPPORTED HARDWARE
 .B neomagic
 supports the following chipsets:
-.PP
-.TP 
+.RS
+.TP
 MagicGraph 128    (NM2070)
 .TP
 MagicGraph 128V   (NM2090)
-.TP 
+.TP
 MagicGraph 128ZV  (NM2093)
-.TP 
+.TP
 MagicGraph 128ZV+ (NM2097)
-.TP 
+.TP
 MagicGraph 128XD  (NM2160)
-.TP 
+.TP
 MagicGraph 256AV  (NM2200)
-.TP 
+.TP
 MagicGraph 256AV+ (NM2230)
-.TP 
+.TP
 MagicGraph 256ZX  (NM2360)
-.TP 
+.TP
 MagicGraph 256XL+ (NM2380)
+.RE
 .PP
 The driver supports depths 8, 15, 16 and 24 for all chipsets except the
-NM2070 which does not support depth 24.  All depths are accelerated except for
-depth 24 which is only accelerated on NM2200
-and newer models.  All visuals are supported in depth 8.  TrueColor and
-DirectColor visuals are supported in the other depths.
-
+NM2070 which does not support depth 24.
+All depths are accelerated except for
+depth 24 which is only accelerated on NM2200 and newer models.
+All visuals are supported in depth 8.
+TrueColor and DirectColor visuals are supported in the other depths.
 .SH CONFIGURATION DETAILS
-Please refer to __xconfigfile__(__filemansuffix__) for general configuration
-details.  This section only covers configuration details specific to this
-driver.
+Please refer to
+.BR xorg.conf (__filemansuffix__)
+for general configuration details.
+This section only covers configuration details specific to this driver.
 .PP
 The following driver
 .B Options
 are supported
 .TP
 .BI "Option \*qNoAccel\*q \*q" boolean \*q
-Disable or enable acceleration.  Default: acceleration is enabled.
+Disable or enable acceleration.
+Default: acceleration is enabled.
 .TP
 .BI "Option \*qSWCursor\*q \*q" boolean \*q
-Disable or enable software cursor.  Default: software cursor is disable
-and a hardware cursor is used.
+Disable or enable software cursor.
+Default: software cursor is disabled and a hardware cursor is used.
 .TP
 .BI "Option \*qPCIBurst\*q \*q" boolean \*q
-Disable or enable PCI burst modes.  Default: enabled.
+Disable or enable PCI burst modes.
+Default: enabled.
 .TP
-.BI "Option \*qRotate\*q \*qCW\*q"
-.TP
-.BI "Option \*qRotate\*q \*qCCW\*q"
-Rotate the display clockwise or counterclockwise.  This mode is unaccelerated.
+.B "Option \*qRotate\*q \*qCW\*q"
+.TQ
+.B "Option \*qRotate\*q \*qCCW\*q"
+Rotate the display clockwise or counterclockwise.
+This mode is unaccelerated.
 Default: no rotation.
 .TP
 .BI "Option \*qShadowFB\*q \*q" boolean \*q
-Enable or disable use of the shadow framebuffer layer.  Default: off.
+Enable or disable use of the shadow framebuffer layer.
+Default: off.
 .TP
 .BI "Option \*qOverlayMem\*q \*q" integer \*q
-Reserve the given amount of memory (in bytes) for the XVideo overlay.  On
-boards with limited memory, display of large XVideo buffers might fail due
-to insufficient available memory.  Using this option solves the problem at
-the expense of reducing the memory available for other operations.  For
-full\-resolution DVDs, 829440 bytes (720x576x2) are necessary.
+Reserve the given amount of memory (in bytes) for the XVideo overlay.
+On boards with limited memory,
+display of large XVideo buffers might fail due to insufficient available memory.
+Using this option solves the problem at
+the expense of reducing the memory available for other operations.
+For full-resolution DVDs, 829440 bytes (720x576x2) are necessary.
 .PP
 .B Note
 .br
@@ -87,9 +94,11 @@ following options are needed to avoid a lock-up of the graphic engine:
     Option "XaaNoScanlineImageWriteRect"
     Option "XaaNoScanlineCPUToScreenColorExpandFill"
 .fi
-
 .SH "SEE ALSO"
-__xservername__(1), __xconfigfile__(__filemansuffix__), Xserver(1), X(__miscmansuffix__)
+.BR Xorg (1),
+.BR xorg.conf (__filemansuffix__),
+.BR Xserver (1),
+.BR X (__miscmansuffix__)
 .SH AUTHORS
-Authors include: Jens Owen, Kevin E. Martin, and also Egbert Eich,  
+Authors include: Jens Owen, Kevin E. Martin, and also Egbert Eich,
 Mark Vojkovich, Alan Hourihane.
