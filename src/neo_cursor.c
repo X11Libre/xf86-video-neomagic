@@ -11,7 +11,7 @@ supporting documentation, and that the name of Precision Insight not be
 used in advertising or publicity pertaining to distribution of the
 software without specific, written prior permission.  Precision Insight
 and its suppliers make no representations about the suitability of this
-software for any purpose.  It is provided "as is" without express or 
+software for any purpose.  It is provided "as is" without express or
 implied warranty.
 
 PRECISION INSIGHT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
@@ -59,7 +59,7 @@ NeoShowCursor(ScrnInfoPtr pScrn)
 
     /* turn cursor on */
     OUTREG(NEOREG_CURSCNTL, NEO_CURS_ENABLE);
-    nPtr->NeoHWCursorShown = TRUE;    
+    nPtr->NeoHWCursorShown = TRUE;
 }
 
 void
@@ -67,9 +67,9 @@ NeoHideCursor(ScrnInfoPtr pScrn)
 {
     NEOPtr nPtr = NEOPTR(pScrn);
     vgaHWPtr hwp = VGAHWPTR(pScrn);
-    
+
     /*
-     * turn cursor off 
+     * turn cursor off
      *
      * Sometimes we loose the I/O map, so directly use I/O here
      */
@@ -99,7 +99,7 @@ neoSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
 			    nAcl->CursorAddress);
     unsigned char *src = nPtr->NeoCursorImage;
     int xoff = 0, yoff = 0;
-    
+
     if ((y < 0) && (y > (-MAX_CURS))) {
 	yoff = -y;
 	y = 0;
@@ -111,16 +111,16 @@ neoSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
     if (yoff != nPtr->NeoCursorPrevY || xoff !=nPtr->NeoCursorPrevX) {
 	nPtr->NeoCursorPrevY = yoff;
 	nPtr->NeoCursorPrevX = xoff;
-       
+
         /* This is for sprites that move off the top of the display.
 	 * this code simply updates the pointer used for loading the sprite.
 	 * Note, in our driver's RealizeCursor, the allocated buffer size
 	 * is twice as large as needed, and we initialize the upper half to all
 	 * zeros, so we can use this pointer trick here.
 	 */
-       
+
          if (yoff) {
-	    src += (yoff * 16);       
+	    src += (yoff * 16);
 	 }
 
 	 /* This is for sprites that move off the left edge of the display.
@@ -134,16 +134,16 @@ neoSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
 		  for (i=0; i<256; i+=2) {
 		     bits = ((CARD32 *)src)[i];
 		     bits2 = ((CARD32 *)src)[i+1];
-		     
+
 		     REVBITS_32(bits);
 		     REVBITS_32(bits2);
-		     
+
 		     bits = ((bits >> xoff) | (bits2 << (32-xoff)));
 		     bits2 >>= xoff;
-		     
+
 		     REVBITS_32(bits);
 		     REVBITS_32(bits2);
-		     
+
 		     ((CARD32 *) nAcl->CursTemp)[i] = bits;
 		     ((CARD32 *) nAcl->CursTemp)[i+1] = bits2;
 		  }
@@ -154,12 +154,12 @@ neoSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
 		     bits2 = ((CARD32 *)src)[i+1];
 
 		     REVBITS_32(bits2);
-		     
+
 		     bits = (bits2 >> (xoff-32));
 		     bits2 = 0;
-		     
+
 		     REVBITS_32(bits);
-		     
+
 		     ((CARD32 *)nAcl->CursTemp)[i] = bits;
 		     ((CARD32 *)nAcl->CursTemp)[i+1] = bits2;
 		  }
@@ -169,10 +169,10 @@ neoSetCursorPosition(ScrnInfoPtr pScrn, int x, int y)
        memcpy(_dest, src, 1024);
        OUTREG(NEOREG_CURSMEMPOS, ((0x000f & (nAcl->CursorAddress >> 10)) << 8) |
 	      ((0x0ff0 & (nAcl->CursorAddress >> 10)) >> 4));
-       
-       
+
+
     }
-   
+
     /* Move the cursor */
     OUTREG(NEOREG_CURSX, x);
     OUTREG(NEOREG_CURSY, y);
@@ -200,7 +200,7 @@ _neoLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src, int xoff, int yoff)
     int i;
     unsigned char *_dest, *_src;
     int _width, _fill;
-    
+
     for (i = 0; i< nPtr->CursorInfo->MaxHeight - yoff; i++) {
       _dest = ((unsigned char *)nPtr->NeoFbBase
 	       + nAcl->CursorAddress
@@ -209,22 +209,22 @@ _neoLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src, int xoff, int yoff)
 		- (xoff & 0x38)) >> 3;
       _src = (src + ((nPtr->CursorInfo->MaxWidth >> 2) * i));
       _fill = (xoff & 0x38) >> 3;
-      
+
       memcpy(_dest,_src,_width);
       memset(_dest + _width, 0, _fill);
-      
+
       _dest += (nPtr->CursorInfo->MaxWidth >> 3);
       _src += (nPtr->CursorInfo->MaxWidth >> 3);
       memcpy(_dest,_src,_width);
       memset(_dest + _width, 0, _fill);
     }
-    memset(nPtr->NeoFbBase + nAcl->CursorAddress 
+    memset(nPtr->NeoFbBase + nAcl->CursorAddress
 	   + ((nPtr->CursorInfo->MaxWidth >> 2) * i),
 	   0, (nPtr->CursorInfo->MaxHeight - i)
 	   * (nPtr->CursorInfo->MaxWidth >> 2));
     /* set cursor address here or we loose the cursor on video mode change */
     /* Load storage location.  */
-    OUTREG(NEOREG_CURSMEMPOS, ((0x000f & (nAcl->CursorAddress >> 10)) << 8)  | 
+    OUTREG(NEOREG_CURSMEMPOS, ((0x000f & (nAcl->CursorAddress >> 10)) << 8)  |
 	   ((0x0ff0 & (nAcl->CursorAddress >> 10)) >> 4));
 }
 
@@ -233,10 +233,10 @@ neoLoadCursorImage(ScrnInfoPtr pScrn, unsigned char *src)
 {
     NEOPtr nPtr = NEOPTR(pScrn);
     nPtr->NeoCursorImage = src;  /* store src address for later use */
-   
+
     /* Reset these because we have a new cursor image */
     nPtr->NeoCursorPrevY = nPtr->NeoCursorPrevX = 0;
-   
+
     _neoLoadCursorImage(pScrn,src,0,0);
 }
 
@@ -263,14 +263,14 @@ neoRealizeCursor(xf86CursorInfoPtr infoPtr, CursorPtr pCurs)
     SrcM = (CARD32*)pCurs->bits->mask;
     DstS = (CARD32*)mem;
     DstM = DstS + (DstPitch >> 1);
-    
-    for(y = pCurs->bits->height, pSrc = DstS, pMsk = DstM; 
-	y--; 
+
+    for(y = pCurs->bits->height, pSrc = DstS, pMsk = DstM;
+	y--;
 	pSrc+=DstPitch, pMsk+=DstPitch, SrcS+=SrcPitch, SrcM+=SrcPitch) {
 	for(x = 0; x < SrcPitch; x++) {
 	    pSrc[x] = ~SrcS[x] & SrcM[x];
 	    pMsk[x] = SrcM[x];
-	    for (z = 0; z < 4; z++) { 
+	    for (z = 0; z < 4; z++) {
 		((char *)pSrc)[x*4+z] =
 		    byte_reversed[((char *)pSrc)[x*4+z] & 0xFF];
 		((char *)pMsk)[x*4+z] =
@@ -310,7 +310,7 @@ NeoCursorInit(ScreenPtr pScreen)
     infoPtr->ShowCursor = NeoShowCursor;
     infoPtr->UseHWCursor = neoUseHWCursor;
     infoPtr->RealizeCursor = neoRealizeCursor;
-    
+
     return(xf86InitCursor(pScreen, infoPtr));
 }
 

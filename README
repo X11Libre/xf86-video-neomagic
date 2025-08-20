@@ -1,7 +1,7 @@
 
 		    Information for NeoMagic Users
 	            NeoMagic Driver Version 0.2/4.0
-		    (based on version 2.0.0/3.3.3) 
+		    (based on version 2.0.0/3.3.3)
 
 
 1) Supported hardware
@@ -131,8 +131,8 @@
    * Horizontal centering for lower than panel resolution on NM2070.
 
 8) Authors
-   
-   The original version of the driver - written for Xfree86 3.3 - 
+
+   The original version of the driver - written for Xfree86 3.3 -
    done by:
    Jens Owen (jens@tungstengraphics.com)
    Kevin E. Martin (kevin@precisioninsight.com)

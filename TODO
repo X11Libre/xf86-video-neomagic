@@ -1,5 +1,5 @@
 1. Acceleration:
- 
+
    a. Limitations from 3.3 apply.
    b. No CPU to Screen color expand. Chipset requires SCANLINE_PAD_BYTE
       XAA only supports SCANLINE_PAD_WORD
@@ -13,7 +13,7 @@
 
 3. I2C Support:
 
-   a. Readback of clockline not implemented. 
+   a. Readback of clockline not implemented.
 
 
 
