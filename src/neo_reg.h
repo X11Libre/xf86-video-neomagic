@@ -11,7 +11,7 @@ supporting documentation, and that the name of Precision Insight not be
 used in advertising or publicity pertaining to distribution of the
 software without specific, written prior permission.  Precision Insight
 and its suppliers make no representations about the suitability of this
-software for any purpose.  It is provided "as is" without express or 
+software for any purpose.  It is provided "as is" without express or
 implied warranty.
 
 PRECISION INSIGHT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,

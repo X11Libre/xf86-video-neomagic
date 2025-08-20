@@ -11,7 +11,7 @@ supporting documentation, and that the name of Precision Insight not be
 used in advertising or publicity pertaining to distribution of the
 software without specific, written prior permission.  Precision Insight
 and its suppliers make no representations about the suitability of this
-software for any purpose.  It is provided "as is" without express or 
+software for any purpose.  It is provided "as is" without express or
 implied warranty.
 
 PRECISION INSIGHT DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
@@ -56,7 +56,7 @@ neo_I2CPutBits(I2CBusPtr b, int clock,  int data) {
 
     VGAwCR(0x21,0x00);
     VGAwCR(0x1D,0x01);
-    
+
     if(clock) reg |= 1;
     if(data)  reg |= 0x4;
     VGAwGR(0xA1,reg);
@@ -67,14 +67,14 @@ static void
 neo_I2CGetBits(I2CBusPtr b, int *clock, int *data) {
     unsigned int reg;
     vgaHWPtr hwp = VGAHWPTR(xf86Screens[b->scrnIndex]);
-    
+
     reg = VGArGR(0xA1);
     *clock = 1 /* (reg & 0x?? ) */;
     *data  = (reg & 0x8) != 0;
     /*ErrorF("neo_I2CGetBits: %d %d\n", *clock, *data);*/
 }
 
-Bool 
+Bool
 neo_I2CInit(ScrnInfoPtr pScrn)
 {
     NEOPtr pNeo = NEOPTR(pScrn);

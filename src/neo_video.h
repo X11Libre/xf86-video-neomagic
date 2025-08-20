@@ -11,7 +11,7 @@ supporting documentation, and that the name of Shigehiro Nomura not be
 used in advertising or publicity pertaining to distribution of the
 software without specific, written prior permission.  Shigehiro Nomura
 and its suppliers make no representations about the suitability of this
-software for any purpose.  It is provided "as is" without express or 
+software for any purpose.  It is provided "as is" without express or
 implied warranty.
 
 SHIGEHIRO NOMURA DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
