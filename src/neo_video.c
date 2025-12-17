@@ -26,10 +26,7 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 /*
  * Copyright 2002 SuSE Linux AG, Author: Egbert Eich
  */
-
-#ifdef HAVE_CONFIG_H
 #include "config.h"
-#endif
 
 #include "neo.h"
 #include "neo_video.h"
