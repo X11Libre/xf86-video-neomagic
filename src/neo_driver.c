@@ -378,8 +378,6 @@ static const OptionInfoRec NEOOptions[] = {
     { -1,                  NULL,           OPTV_NONE,	{0}, FALSE }
 };
 
-#ifdef XFree86LOADER
-
 static MODULESETUPPROTO(neoSetup);
 
 static XF86ModuleVersionInfo neoVersRec =
@@ -421,8 +419,6 @@ neoSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	return NULL;
     }
 }
-
-#endif /* XFree86LOADER */
 
 static Bool
 NEOGetRec(ScrnInfoPtr pScrn)
