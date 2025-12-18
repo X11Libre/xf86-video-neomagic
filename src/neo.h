@@ -185,9 +185,6 @@ typedef struct neoRec
 {
     int NeoChipset;
     pciVideoPtr PciInfo;
-#ifndef XSERVER_LIBPCIACCESS
-    PCITAG      PciTag;
-#endif
     EntityInfoPtr pEnt;
     NEOACLRec Accel;
     unsigned long NeoMMIOAddr;

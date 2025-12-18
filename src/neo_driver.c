@@ -487,9 +487,6 @@ NEOProbe(DriverPtr drv, int flags)
     }
 
     /* PCI BUS */
-#ifndef XSERVER_LIBPCIACCESS
-    if (xf86GetPciVideoInfo() )
-#endif
     {
 	numUsed = xf86MatchPciInstances(NEO_NAME, PCI_VENDOR_NEOMAGIC,
 					NEOChipsets, NEOPCIchipsets,
@@ -589,20 +586,12 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
     /* This is the general case */
     for (i = 0; i<pScrn->numEntities; i++) {
 	nPtr->pEnt = xf86GetEntityInfo(pScrn->entityList[i]);
-#ifndef XSERVER_LIBPCIACCESS
-	if (nPtr->pEnt->resources) return FALSE;
-#endif
 	nPtr->NeoChipset = nPtr->pEnt->chipset;
 	pScrn->chipset = (char *)xf86TokenToString(NEOChipsets,
 						   nPtr->pEnt->chipset);
 	/* This driver can handle PCI buses */
 	if (nPtr->pEnt->location.type == BUS_PCI) {
 	    nPtr->PciInfo = xf86GetPciInfoForEntity(nPtr->pEnt->index);
-#ifndef XSERVER_LIBPCIACCESS
-	    nPtr->PciTag = pciTag(nPtr->PciInfo->bus,
-				  nPtr->PciInfo->device,
-				  nPtr->PciInfo->func);
-#endif
 	}
     }
     xf86DrvMsg(pScrn->scrnIndex, X_INFO, "Chipset is a ");
@@ -1073,12 +1062,6 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 		           nPtr->NeoMMIOAddr2);
 	    }
 	}
-#ifndef XSERVER_LIBPCIACCESS
-	/* XXX What about VGA resources in OPERATING mode? */
-	if (xf86RegisterResources(nPtr->pEnt->index, NULL, ResExclusive))
-	    RETURN;
-#endif
-
     }
     else
 	RETURN;
@@ -1339,9 +1322,6 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
     NEOACLPtr nAcl;
     VisualPtr visual;
     int allocatebase, freespace, currentaddr;
-#ifndef XSERVER_LIBPCIACCESS
-    unsigned int racflag = RAC_FB;
-#endif
     unsigned char *FBStart;
     int height, width, displayWidth;
 
@@ -1574,14 +1554,6 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
                          NEOLoadPalette, NULL,
                          CMAP_PALETTED_TRUECOLOR | CMAP_RELOAD_ON_MODE_SWITCH))
 	return FALSE;
-
-#ifndef XSERVER_LIBPCIACCESS
-    racflag |= RAC_COLORMAP;
-    if (nPtr->NeoHWCursorInitialized)
-        racflag |= RAC_CURSOR;
-
-    pScrn->racIoFlags = pScrn->racMemFlags = racflag;
-#endif
 
     NEOInitVideo(pScreen);
 
@@ -1820,20 +1792,6 @@ neoMapMem(ScrnInfoPtr pScrn)
 
     if (!nPtr->noMMIO) {
         if (nPtr->pEnt->location.type == BUS_PCI){
-
-#ifndef XSERVER_LIBPCIACCESS
-            nPtr->NeoMMIOBase =
-                xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
-                              nPtr->PciTag, nPtr->NeoMMIOAddr,
-                              0x200000L);
-            if (nPtr->NeoMMIOAddr2 != 0){
-                nPtr->NeoMMIOBase2 =
-                    xf86MapPciMem(pScrn->scrnIndex, VIDMEM_MMIO,
-                                  nPtr->PciTag, nPtr->NeoMMIOAddr2,
-                                  0x100000L);
-            }
-
-#else
             void** result = (void**)&nPtr->NeoMMIOBase;
             int err = pci_device_map_range(nPtr->PciInfo,
                                            nPtr->NeoMMIOAddr,
@@ -1854,7 +1812,6 @@ neoMapMem(ScrnInfoPtr pScrn)
                 if (err)
                     return FALSE;
             }
-#endif
         } else
 #ifdef VIDMEM_MMIO
             nPtr->NeoMMIOBase =
@@ -1867,14 +1824,6 @@ neoMapMem(ScrnInfoPtr pScrn)
     }
 
     if (nPtr->pEnt->location.type == BUS_PCI)
-
-#ifndef XSERVER_LIBPCIACCESS
-        nPtr->NeoFbBase =
-            xf86MapPciMem(pScrn->scrnIndex, VIDMEM_FRAMEBUFFER,
-                          nPtr->PciTag,
-                          (unsigned long)nPtr->NeoLinearAddr,
-                          nPtr->NeoFbMapSize);
-#else
     {
         void** result = (void**)&nPtr->NeoFbBase;
         int err = pci_device_map_range(nPtr->PciInfo,
@@ -1886,7 +1835,6 @@ neoMapMem(ScrnInfoPtr pScrn)
         if (err)
             return FALSE;
     }
-#endif
     else
 #ifdef VIDMEM_FRAMEBUFFER
         nPtr->NeoFbBase =
@@ -1908,30 +1856,13 @@ neoUnmapMem(ScrnInfoPtr pScrn)
 {
     NEOPtr nPtr = NEOPTR(pScrn);
 
-#ifndef XSERVER_LIBPCIACCESS
-    if (nPtr->NeoMMIOBase)
-        xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase,
-                        0x200000L);
-#else
     if (nPtr->NeoMMIOBase)
         pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase, 0x200000L);
-#endif
     nPtr->NeoMMIOBase = NULL;
-#ifndef XSERVER_LIBPCIACCESS
-    if (nPtr->NeoMMIOBase2)
-        xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoMMIOBase2,
-                        0x100000L);
-#else
     if (nPtr->NeoMMIOBase2)
         pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase2, 0x100000L);
-#endif
     nPtr->NeoMMIOBase2 = NULL;
-#ifndef XSERVER_LIBPCIACCESS
-    xf86UnMapVidMem(pScrn->scrnIndex, (pointer)nPtr->NeoFbBase,
-                    nPtr->NeoFbMapSize);
-#else
     pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoFbBase, nPtr->NeoFbMapSize);
-#endif
     nPtr->NeoFbBase = NULL;
 
     return TRUE;
