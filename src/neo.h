@@ -70,7 +70,6 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "neo_reg.h"
 #include "neo_macros.h"
 
-#include "compat-api.h"
 /* Supported chipsets */
 typedef enum {
     NM2070,
@@ -86,8 +85,8 @@ typedef enum {
 
 /* function prototypes */
 
-extern Bool NEOSwitchMode(SWITCH_MODE_ARGS_DECL);
-extern void NEOAdjustFrame(ADJUST_FRAME_ARGS_DECL);
+extern Bool NEOSwitchMode(ScrnInfoPtr arg, DisplayModePtr mode);
+extern void NEOAdjustFrame(ScrnInfoPtr arg, int x, int y);
 
 /* in neo_cursor.c */
 extern Bool NeoCursorInit(ScreenPtr pScrn);
@@ -99,7 +98,7 @@ extern Bool neo_I2CInit(ScrnInfoPtr pScrn);
 
 /* in neo_shadow.c */
 void neoShadowUpdate (ScreenPtr pScreen, shadowBufPtr pBuf);
-void neoPointerMoved(SCRN_ARG_TYPE arg, int x, int y);
+void neoPointerMoved(ScrnInfoPtr arg, int x, int y);
 void neoRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void neoRefreshArea8(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
 void neoRefreshArea16(ScrnInfoPtr pScrn, int num, BoxPtr pbox);
@@ -241,7 +240,7 @@ typedef struct neoRec
     int ShadowPitch;
     CreateScreenResourcesProcPtr CreateScreenResources;
     RefreshAreaFuncPtr refreshArea;
-    void	(*PointerMoved)(SCRN_ARG_TYPE arg, int x, int y);
+    void	(*PointerMoved)(ScrnInfoPtr arg, int x, int y);
     int rotate;
     Bool showcache;
     Bool video;
