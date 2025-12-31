@@ -133,8 +133,8 @@ NEO_SetMode(
    if(!pMode) { /* restore the original mode */
  	if(pNEO->DGAactive) {
 	    pScrn->currentMode = NEOSavedDGAModes[index];
-            NEOSwitchMode(SWITCH_MODE_ARGS(pScrn, pScrn->currentMode));
-	    NEOAdjustFrame(ADJUST_FRAME_ARGS(pScrn, 0, 0));
+            NEOSwitchMode(pScrn, pScrn->currentMode);
+	    NEOAdjustFrame(pScrn, 0, 0);
  	    pNEO->DGAactive = FALSE;
 	}
    } else {
@@ -143,7 +143,7 @@ NEO_SetMode(
 	    pNEO->DGAactive = TRUE;
 	}
 
-        NEOSwitchMode(SWITCH_MODE_ARGS(pScrn, pMode->mode));
+        NEOSwitchMode(pScrn, pMode->mode);
    }
 
    return TRUE;
@@ -167,7 +167,7 @@ NEO_SetViewport(
    NEOPtr pNEO = NEOPTR(pScrn);
    vgaHWPtr hwp = VGAHWPTR(pScrn);
 
-   NEOAdjustFrame(ADJUST_FRAME_ARGS(pScrn, x, y));
+   NEOAdjustFrame(pScrn, x, y);
    /* wait for retrace */
    while((hwp->readST01(hwp) & 0x08));
    while(!(hwp->readST01(hwp) & 0x08));

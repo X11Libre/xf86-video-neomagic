@@ -100,12 +100,12 @@ static const OptionInfoRec *	NEOAvailableOptions(int chipid, int busid);
 static void     NEOIdentify(int flags);
 static Bool     NEOProbe(DriverPtr drv, int flags);
 static Bool     NEOPreInit(ScrnInfoPtr pScrn, int flags);
-static Bool     NEOScreenInit(SCREEN_INIT_ARGS_DECL);
-static Bool     NEOEnterVT(VT_FUNC_ARGS_DECL);
-static void     NEOLeaveVT(VT_FUNC_ARGS_DECL);
-static Bool     NEOCloseScreen(CLOSE_SCREEN_ARGS_DECL);
-static void     NEOFreeScreen(FREE_SCREEN_ARGS_DECL);
-static ModeStatus NEOValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode,
+static Bool     NEOScreenInit(ScreenPtr pScreen, int argc, char **argv);
+static Bool     NEOEnterVT(ScrnInfoPtr arg);
+static void     NEOLeaveVT(ScrnInfoPtr arg);
+static Bool     NEOCloseScreen(ScreenPtr pScreen);
+static void     NEOFreeScreen(ScrnInfoPtr arg);
+static ModeStatus NEOValidMode(ScrnInfoPtr arg, DisplayModePtr mode,
                                Bool verbose, int flags);
 
 /* Internally used functions */
@@ -1197,9 +1197,8 @@ NEOPreInit(ScrnInfoPtr pScrn, int flags)
 
 /* Mandatory */
 static Bool
-NEOEnterVT(VT_FUNC_ARGS_DECL)
+NEOEnterVT(ScrnInfoPtr pScrn)
 {
-    SCRN_INFO_PTR(arg);
     NEOPtr nPtr = NEOPTR(pScrn);
 
     /* Should we re-save the text mode on each VT enter? */
@@ -1211,16 +1210,15 @@ NEOEnterVT(VT_FUNC_ARGS_DECL)
 
     if (nPtr->NeoHWCursorShown)
 	NeoShowCursor(pScrn);
-    NEOAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
+    NEOAdjustFrame(pScrn, pScrn->frameX0, pScrn->frameY0);
 
     return TRUE;
 }
 
 /* Mandatory */
 static void
-NEOLeaveVT(VT_FUNC_ARGS_DECL)
+NEOLeaveVT(ScrnInfoPtr pScrn)
 {
-    SCRN_INFO_PTR(arg);
     NEOPtr nPtr = NEOPTR(pScrn);
 
     /* Invalidate the cached acceleration registers */
@@ -1314,7 +1312,7 @@ NEOSaveScreen(ScreenPtr pScreen, int mode)
 
 /* Mandatory */
 static Bool
-NEOScreenInit(SCREEN_INIT_ARGS_DECL)
+NEOScreenInit(ScreenPtr pScreen, int argc, char **argv)
 {
     ScrnInfoPtr pScrn;
     vgaHWPtr hwp;
@@ -1351,7 +1349,7 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
     if (!neoModeInit(pScrn,pScrn->currentMode))
 	return FALSE;
     vgaHWSaveScreen(pScreen,SCREEN_SAVER_ON);
-    NEOAdjustFrame(ADJUST_FRAME_ARGS(pScrn, pScrn->frameX0, pScrn->frameY0));
+    NEOAdjustFrame(pScrn, pScrn->frameX0, pScrn->frameY0);
 
     /*
      * Reset visual list.
@@ -1581,17 +1579,15 @@ NEOScreenInit(SCREEN_INIT_ARGS_DECL)
 
 /* Mandatory */
 Bool
-NEOSwitchMode(SWITCH_MODE_ARGS_DECL)
+NEOSwitchMode(ScrnInfoPtr pScrn, DisplayModePtr mode)
 {
-    SCRN_INFO_PTR(arg);
     return neoModeInit(pScrn, mode);
 }
 
 /* Mandatory */
 void
-NEOAdjustFrame(ADJUST_FRAME_ARGS_DECL)
+NEOAdjustFrame(ScrnInfoPtr pScrn, int x, int y)
 {
-    SCRN_INFO_PTR(arg);
     NEOPtr nPtr;
     vgaHWPtr hwp;
     int oldExtCRTDispAddr;
@@ -1651,7 +1647,7 @@ NEOAdjustFrame(ADJUST_FRAME_ARGS_DECL)
 
 /* Mandatory */
 static Bool
-NEOCloseScreen(CLOSE_SCREEN_ARGS_DECL)
+NEOCloseScreen(ScreenPtr pScreen)
 {
     ScrnInfoPtr pScrn = xf86ScreenToScrn(pScreen);
     NEOPtr nPtr = NEOPTR(pScrn);
@@ -1671,14 +1667,13 @@ NEOCloseScreen(CLOSE_SCREEN_ARGS_DECL)
 
     pScrn->vtSema = FALSE;
     pScreen->CloseScreen = nPtr->CloseScreen;
-    return (*pScreen->CloseScreen)(CLOSE_SCREEN_ARGS);
+    return (*pScreen->CloseScreen)(pScreen);
 }
 
 /* Optional */
 static void
-NEOFreeScreen(FREE_SCREEN_ARGS_DECL)
+NEOFreeScreen(ScrnInfoPtr pScrn)
 {
-    SCRN_INFO_PTR(arg);
     if (xf86LoaderCheckSymbol("vgaHWFreeHWRec"))
 	vgaHWFreeHWRec(pScrn);
     NEOFreeRec(pScrn);
@@ -1686,9 +1681,8 @@ NEOFreeScreen(FREE_SCREEN_ARGS_DECL)
 
 /* Optional */
 static ModeStatus
-NEOValidMode(SCRN_ARG_TYPE arg, DisplayModePtr mode, Bool verbose, int flags)
+NEOValidMode(ScrnInfoPtr pScrn, DisplayModePtr mode, Bool verbose, int flags)
 {
-    SCRN_INFO_PTR(arg);
     NEOPtr nPtr = NEOPTR(pScrn);
     int vDisplay = mode->VDisplay * ((mode->Flags & V_DBLSCAN) ? 2 : 1);
 
@@ -2872,7 +2866,7 @@ neo_ddc1(ScrnInfoPtr pScrn)
     VGAwCR(0x21,0x00);
     VGAwCR(0x1D,0x01);  /* some Voodoo */
     VGAwGR(0xA1,0x2F);
-    ret =  xf86DoEDID_DDC1(XF86_SCRN_ARG(pScrn),neo_ddc1SetSpeed,neo_ddc1Read);
+    ret =  xf86DoEDID_DDC1(pScrn,neo_ddc1SetSpeed,neo_ddc1Read);
     /* undo initialization */
     VGAwCR(0x21,reg1);
     VGAwCR(0x1D,reg2);
@@ -2905,7 +2899,7 @@ neoDoDDC2(ScrnInfoPtr pScrn)
     if (xf86LoadSubModule(pScrn, "i2c")) {
 	if (neo_I2CInit(pScrn)) {
 	    ret = xf86SetDDCproperties(pScrn,xf86PrintEDID(xf86DoEDID_DDC2(
-					   XF86_SCRN_ARG(pScrn),nPtr->I2C)));
+					   pScrn,nPtr->I2C)));
 	}
     }
     VGAwGR(0x09,0x00);

@@ -51,9 +51,8 @@ neoRefreshArea(ScrnInfoPtr pScrn, int num, BoxPtr pbox)
 }
 
 void
-neoPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
+neoPointerMoved(ScrnInfoPtr pScrn, int x, int y)
 {
-    SCRN_INFO_PTR(arg);
     NEOPtr nPtr = NEOPTR(pScrn);
     int newX, newY;
 
@@ -65,7 +64,7 @@ neoPointerMoved(SCRN_ARG_TYPE arg, int x, int y)
 	newY = pScrn->pScreen->width - x - 1;
     }
 
-    (*nPtr->PointerMoved)(arg, newX, newY);
+    (*nPtr->PointerMoved)(pScrn, newX, newY);
 }
 
 void
