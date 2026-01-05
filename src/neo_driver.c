@@ -400,8 +400,8 @@ static XF86ModuleVersionInfo neoVersRec =
  */
 _X_EXPORT XF86ModuleData neomagicModuleData = { &neoVersRec, neoSetup, NULL };
 
-static pointer
-neoSetup(pointer module, pointer opts, int *errmaj, int *errmin)
+static void *
+neoSetup(void *module, void *opts, int *errmaj, int *errmin)
 {
     static Bool setupDone = FALSE;
 
@@ -413,7 +413,7 @@ neoSetup(pointer module, pointer opts, int *errmaj, int *errmin)
 	 * The return value must be non-NULL on success even though there
 	 * is no TearDownProc.
 	 */
-  	return (pointer)1;
+        return (void*)1;
     } else {
 	if (errmaj) *errmaj = LDR_ONCEONLY;
 	return NULL;
@@ -1857,12 +1857,12 @@ neoUnmapMem(ScrnInfoPtr pScrn)
     NEOPtr nPtr = NEOPTR(pScrn);
 
     if (nPtr->NeoMMIOBase)
-        pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase, 0x200000L);
+        pci_device_unmap_range(nPtr->PciInfo, (void*)nPtr->NeoMMIOBase, 0x200000L);
     nPtr->NeoMMIOBase = NULL;
     if (nPtr->NeoMMIOBase2)
-        pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoMMIOBase2, 0x100000L);
+        pci_device_unmap_range(nPtr->PciInfo, (void*)nPtr->NeoMMIOBase2, 0x100000L);
     nPtr->NeoMMIOBase2 = NULL;
-    pci_device_unmap_range(nPtr->PciInfo, (pointer)nPtr->NeoFbBase, nPtr->NeoFbMapSize);
+    pci_device_unmap_range(nPtr->PciInfo, (void*)nPtr->NeoFbBase, nPtr->NeoFbMapSize);
     nPtr->NeoFbBase = NULL;
 
     return TRUE;

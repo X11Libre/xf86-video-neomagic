@@ -39,17 +39,17 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 static XF86VideoAdaptorPtr NEOSetupVideo(ScreenPtr);
 
 static int NEOPutVideo(ScrnInfoPtr, short, short, short, short,
-		       short, short, short, short, RegionPtr, pointer,
+		       short, short, short, short, RegionPtr, void*,
 		       DrawablePtr);
 
-static void NEOStopVideo(ScrnInfoPtr, pointer, Bool);
-static int NEOSetPortAttribute(ScrnInfoPtr, Atom, INT32, pointer);
-static int NEOGetPortAttribute(ScrnInfoPtr, Atom, INT32 *, pointer);
+static void NEOStopVideo(ScrnInfoPtr, void*, Bool);
+static int NEOSetPortAttribute(ScrnInfoPtr, Atom, INT32, void*);
+static int NEOGetPortAttribute(ScrnInfoPtr, Atom, INT32 *, void*);
 static void NEOQueryBestSize(ScrnInfoPtr, Bool, short, short, short,
-			     short, unsigned int *, unsigned int *, pointer);
+			     short, unsigned int *, unsigned int *, void*);
 static int NEOPutImage(ScrnInfoPtr, short, short, short, short, short, short,
 		       short, short, int, unsigned char *, short, short, Bool,
-		       RegionPtr, pointer, DrawablePtr);
+		       RegionPtr, void*, DrawablePtr);
 static int NEOQueryImageAttributes(ScrnInfoPtr, int, unsigned short *,
 				   unsigned short *, int *, int *);
 
@@ -227,7 +227,7 @@ NEOSetupVideo(ScreenPtr pScreen)
     overlayAdaptor->nPorts = 1;
     overlayAdaptor->pPortPrivates = (DevUnion*) &overlayAdaptor[1];
     overlayAdaptor->pPortPrivates[0].ptr =
-	(pointer) &overlayAdaptor->pPortPrivates[1];
+        (void*) &overlayAdaptor->pPortPrivates[1];
     overlayAdaptor->nAttributes = nElems(NEOVideoAttributes);
     overlayAdaptor->pAttributes = NEOVideoAttributes;
     overlayAdaptor->nImages = nElems(NEOVideoImages);
@@ -295,7 +295,7 @@ static int
 NEOPutVideo(ScrnInfoPtr pScrn,
 	     short src_x, short src_y, short drw_x, short drw_y,
 	     short src_w, short src_h, short drw_w, short drw_h,
-	     RegionPtr clipBoxes, pointer data, DrawablePtr pDraw)
+	     RegionPtr clipBoxes, void *data, DrawablePtr pDraw)
 {
     NEOPortPtr pPriv = (NEOPortPtr)data;
     NEOPtr nPtr = NEOPTR(pScrn);
@@ -476,7 +476,7 @@ NEOPutVideo(ScrnInfoPtr pScrn,
 }
 
 static void
-NEOStopVideo(ScrnInfoPtr pScrn, pointer data, Bool exit)
+NEOStopVideo(ScrnInfoPtr pScrn, void *data, Bool exit)
 {
     NEOPortPtr pPriv = (NEOPortPtr)data;
     NEOPtr nPtr = NEOPTR(pScrn);
@@ -520,7 +520,7 @@ NEOStopVideo(ScrnInfoPtr pScrn, pointer data, Bool exit)
 
 static int
 NEOSetPortAttribute(ScrnInfoPtr pScrn, Atom attribute, INT32 value,
-		    pointer data)
+		    void *data)
 {
     NEOPortPtr pPriv = (NEOPortPtr)data;
     NEOPtr nPtr = NEOPTR(pScrn);
@@ -566,7 +566,7 @@ NEOSetPortAttribute(ScrnInfoPtr pScrn, Atom attribute, INT32 value,
 
 static int
 NEOGetPortAttribute(ScrnInfoPtr pScrn, Atom attribute, INT32 *value,
-		    pointer data)
+		    void *data)
 {
     NEOPortPtr pPriv = (NEOPortPtr)data;
 
@@ -589,7 +589,7 @@ static void
 NEOQueryBestSize(ScrnInfoPtr pScrn, Bool motion,
 		 short vid_w, short vid_h, short drw_w, short drw_h,
 		 unsigned int *p_w, unsigned int *p_h,
-		 pointer data)
+		 void *data)
 {
 #ifdef DEBUG
     xf86DrvMsg(pScrn->scrnIndex,X_INFO,"NEOQueryBestSize\n");
@@ -603,7 +603,7 @@ NEOPutImage(ScrnInfoPtr pScrn,
 	    short src_x, short src_y, short drw_x, short drw_y,
 	    short src_w, short src_h, short drw_w, short drw_h,
 	    int id, unsigned char *buf, short width, short height,
-	    Bool sync, RegionPtr clipBoxes, pointer data,
+	    Bool sync, RegionPtr clipBoxes, void *data,
 	    DrawablePtr pDraw)
 {
     NEOPtr nPtr = NEOPTR(pScrn);
@@ -1036,7 +1036,7 @@ NEOAllocSurface(ScrnInfoPtr pScrn, int id,
     surface->id = id;
     surface->pitches[0] = pitch;
     surface->offsets[0] = linear->offset << 1;
-    surface->devPrivate.ptr = (pointer)pPriv;
+    surface->devPrivate.ptr = (void*)pPriv;
     return (Success);
 }
 
@@ -1135,7 +1135,7 @@ NEOGetSurfaceAttribute(ScrnInfoPtr pScrn, Atom attr, INT32 *value)
     xf86DrvMsg(pScrn->scrnIndex,X_INFO,"NEOGetSurfaceAttribute\n");
 #endif
     return (NEOGetPortAttribute(pScrn,
-            attr, value, (pointer)nPtr->overlayAdaptor->pPortPrivates[0].ptr));
+            attr, value, (void*)nPtr->overlayAdaptor->pPortPrivates[0].ptr));
 }
 
 static int
@@ -1147,5 +1147,5 @@ NEOSetSurfaceAttribute(ScrnInfoPtr pScrn, Atom attr, INT32 value)
     xf86DrvMsg(pScrn->scrnIndex,X_INFO,"NEOSetSurfaceAttribute\n");
 #endif
     return (NEOSetPortAttribute(pScrn,
-            attr, value, (pointer)nPtr->overlayAdaptor->pPortPrivates[0].ptr));
+            attr, value, (void*)nPtr->overlayAdaptor->pPortPrivates[0].ptr));
 }
