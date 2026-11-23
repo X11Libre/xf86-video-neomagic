@@ -70,6 +70,10 @@ CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 #include "neo_reg.h"
 #include "neo_macros.h"
 
+#ifndef MIN
+#define MIN(a, b) (((a) < (b)) ? (a) : (b))
+#endif
+
 /* Supported chipsets */
 typedef enum {
     NM2070,
