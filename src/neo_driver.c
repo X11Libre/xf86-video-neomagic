@@ -136,6 +136,7 @@ static int      neoFindMode(int xres, int yres, int depth);
 #define NEO_MAJOR_VERSION PACKAGE_VERSION_MAJOR
 #define NEO_MINOR_VERSION PACKAGE_VERSION_MINOR
 #define NEO_PATCHLEVEL PACKAGE_VERSION_PATCHLEVEL
+#define NEO_VERSION_SUFFIX PACKAGE_VERSION_SUFFIX
 
 /*
  * This is intentionally screen-independent.  It indicates the binding
@@ -399,6 +400,9 @@ static XF86ModuleVersionInfo neoVersRec =
  * Its name has to be the driver name followed by ModuleData
  */
 _X_EXPORT XF86ModuleData neomagicModuleData = { &neoVersRec, neoSetup, NULL };
+#ifdef XF86_MODULE_VERSION_SUFFIX
+XF86_MODULE_VERSION_SUFFIX(neomagic, NEO_VERSION_SUFFIX);
+#endif
 
 static void *
 neoSetup(void *module, void *opts, int *errmaj, int *errmin)
