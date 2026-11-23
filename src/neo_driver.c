@@ -1498,7 +1498,6 @@ NEOScreenInit(ScreenPtr pScreen, int argc, char **argv)
 
     /* Setup the acceleration primitives */
     if (!nPtr->noAccel && nPtr->NeoMMIOBase) {
-        Bool ret = FALSE;
         if (nAcl->cacheStart >= nAcl->cacheEnd) {
             xf86DrvMsg(pScrn->scrnIndex, X_ERROR,
                        "Too little space for pixmap cache.\n");
