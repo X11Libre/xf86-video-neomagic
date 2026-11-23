@@ -594,8 +594,8 @@ NEOQueryBestSize(ScrnInfoPtr pScrn, Bool motion,
 #ifdef DEBUG
     xf86DrvMsg(pScrn->scrnIndex,X_INFO,"NEOQueryBestSize\n");
 #endif
-    *p_w = min(drw_w, 1024);
-    *p_h = min(drw_h, 1024);
+    *p_w = MIN(drw_w, 1024);
+    *p_h = MIN(drw_h, 1024);
 }
 
 static int
