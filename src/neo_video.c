@@ -141,17 +141,17 @@ static XF86AttributeRec NEOVideoAttributes[] =
     {
 	XvSettable | XvGettable,
 	0x000000, 0xFFFFFF,
-	"XV_COLORKEY"
+	(char *) "XV_COLORKEY"
     },
     {
 	XvSettable | XvGettable,
 	-128, 127,
-	"XV_BRIGHTNESS"
+	(char *) "XV_BRIGHTNESS"
     },
     {
 	XvSettable | XvGettable,
 	0,2,
-	"XV_INTERLACE"
+	(char *) "XV_INTERLACE"
     },
 };
 
